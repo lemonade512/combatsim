@@ -2,7 +2,7 @@
 
 import math
 
-from dice import Dice
+from combatsim.dice import Dice
 
 # Attributes:
 #   Name, level, xp, proficiency, abilities, HD, HP,
@@ -29,12 +29,35 @@ class Creature:
         self._wisdom = kwargs.get('wisdom', 10)
         self._charisma = kwargs.get('charisma', 10)
 
-        self.str = self._ability_bonus(self._strength)
-        self.dex = self._ability_bonus(self._dexterity)
-        self.con = self._ability_bonus(self._constitution)
-        self.int = self._ability_bonus(self._intelligence)
-        self.wis = self._ability_bonus(self._wisdom)
-        self.cha = self._ability_bonus(self._charisma)
+    @property
+    def str(self):
+        """ Strength ability modifier """
+        return self._ability_bonus(self._strength)
+
+    @property
+    def dex(self):
+        """ Dexterity ability modifier """
+        return self._ability_bonus(self._dexterity)
+
+    @property
+    def con(self):
+        """ Constitution ability modifier """
+        return self._ability_bonus(self._constitution)
+
+    @property
+    def int(self):
+        """ Intelligence ability modifer """
+        return self._ability_bonus(self._intelligence)
+
+    @property
+    def wis(self):
+        """ Wisdom ability modifier """
+        return self._ability_bonus(self._wisdom)
+
+    @property
+    def cha(self):
+        """ Charisma ability modifier """
+        return self._ability_bonus(self._charisma)
 
     def __str__(self):
         return f"{self.name}"
