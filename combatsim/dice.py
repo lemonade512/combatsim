@@ -3,18 +3,57 @@
 import random
 
 
+class Modifier:
+
+    def __init__(self, modifier):
+        self.mod = modifier
+
+    def __add__(self, other):
+        if isinstance(other, int):
+            return other + self.mod
+
+        return NotImplemented
+
+    __radd__ = __add__
+
+    def __sub__(self, other):
+        if isinstance(other, int):
+            return self.mod - other
+
+        return NotImplemented
+
+    def __rsub__(self, other):
+        if isinstance(other, int):
+            return other - self.mod
+
+        return NotImplemented
+
+
 class Dice:
-    @staticmethod
-    def roll(dice):
+
+    def __init__(self, dice, modifiers=None):
         if isinstance(dice, str):
             dice = [dice]
+        self.dice = dice
 
+        if not modifiers:
+            modifiers = []
+        self.modifiers = modifiers
+
+    def __add__(self, other):
+        if isinstance(other, Modifier):
+            return Dice(self.dice, self.modifiers + [other])
+
+        return NotImplemented
+
+    def roll(self):
         output = []
-        for d in dice:
+        for d in self.dice:
             num, faces = Dice._parse(d)
             rolls = [random.randint(1, faces) for _ in range(num)]
+            modifiers = sum(self.modifiers)
             output.append(
-                sum([random.randint(1, faces) for _ in range(num)])
+                sum(rolls) + modifiers
             )
 
         if len(output) == 1:
