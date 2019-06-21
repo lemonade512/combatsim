@@ -16,7 +16,11 @@ class Dice:
             output.append(
                 sum([random.randint(1, faces) for _ in range(num)])
             )
-        return output
+
+        if len(output) == 1:
+            return output[0]
+        else:
+            return output
 
     @staticmethod
     def avg(dice):
@@ -50,5 +54,6 @@ class Dice:
 
 
 if __name__ == "__main__":
+    print(Dice.roll('1d20'))
     print(Dice.roll(['1d6', 'd8', '2d10']))
     print(Dice.sum(['2d6', '5d8']))
