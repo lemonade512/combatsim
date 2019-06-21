@@ -72,11 +72,6 @@ class Dice:
         return avg
 
     @staticmethod
-    def sum(dice):
-        """ Rolls the dice and sums their values """
-        return sum(Dice.roll(dice))
-
-    @staticmethod
     def _parse(dice):
         """ Parses a single 'dice' string such as 'd6' or '5d20' """
         splits = dice.split("d")
