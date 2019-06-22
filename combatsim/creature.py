@@ -2,7 +2,7 @@
 
 import math
 
-from combatsim.dice import Dice
+from combatsim.dice import Dice, Modifier
 
 # Attributes:
 #   Name, level, xp, proficiency, abilities, HD, HP,
@@ -10,6 +10,35 @@ from combatsim.dice import Dice
 
 # Ignoring for now:
 #   spellcasting
+
+class Ability(Modifier):
+    """ Abstraction around abilities. """
+
+    def __init__(self, name, value=None, modifier=None):
+        if not value and not modifier:
+            raise ValueError(f"No value or modifier specified for {name}")
+
+        if value and modifier:
+            raise ValueError(
+                f"Cannot specify both modifier and value for {name}"
+            )
+
+        if modifier:
+            value = Ability._to_value(modifier)
+        self.value = value
+
+    @property
+    def mod(self):
+        return math.floor(int(self.value) / 2 - 5)
+
+    @staticmethod
+    def _to_value(modifier):
+        """ Converts a modifier to a value.
+
+        This will convert to the max possible value for the given modifier.
+        So, if the modifier is +3, the value will be 17.
+        """
+        return 1 + (2 * (modifier + 5))
 
 
 # TODO (phillip): Figure out a good way to specify base creature
@@ -22,42 +51,16 @@ class Creature:
             'proficiency', 1 + math.ceil(self.level / 4)
         )
         self.hp = kwargs.get('hp', 10)
-        self._strength = kwargs.get('strength', 10)
-        self._dexterity = kwargs.get('dexterity', 10)
-        self._constitution = kwargs.get('constitution', 10)
-        self._intelligence = kwargs.get('intelligence', 10)
-        self._wisdom = kwargs.get('wisdom', 10)
-        self._charisma = kwargs.get('charisma', 10)
-
-    @property
-    def str(self):
-        """ Strength ability modifier """
-        return self._ability_bonus(self._strength)
-
-    @property
-    def dex(self):
-        """ Dexterity ability modifier """
-        return self._ability_bonus(self._dexterity)
-
-    @property
-    def con(self):
-        """ Constitution ability modifier """
-        return self._ability_bonus(self._constitution)
-
-    @property
-    def int(self):
-        """ Intelligence ability modifer """
-        return self._ability_bonus(self._intelligence)
-
-    @property
-    def wis(self):
-        """ Wisdom ability modifier """
-        return self._ability_bonus(self._wisdom)
-
-    @property
-    def cha(self):
-        """ Charisma ability modifier """
-        return self._ability_bonus(self._charisma)
+        self.strength = Ability("Strength", kwargs.get('strength', 10))
+        self.dexterity = Ability("Dexterity", kwargs.get('dexterity', 10))
+        self.constitution = Ability(
+            "Constitution", kwargs.get('constitution', 10)
+        )
+        self.intelligence = Ability(
+            "Intelligence", kwargs.get('intelligence', 10)
+        )
+        self.wisdom = Ability("Wisdom", kwargs.get('wisdom', 10))
+        self.charisma = Ability("Charisma", kwargs.get('charisma', 10))
 
     def __str__(self):
         return f"{self.name}"

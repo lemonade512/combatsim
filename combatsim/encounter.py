@@ -35,7 +35,7 @@ class Encounter:
         """
         initiative = []
         for creature in self.creatures:
-            roll = Dice.roll('1d20') + creature.dex
+            roll = Dice.roll('1d20') + creature.dexterity
             initiative.append((roll, creature))
 
         initiative.sort(key=lambda x: x[0], reverse=True)
