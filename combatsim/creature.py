@@ -3,6 +3,7 @@
 import math
 
 from combatsim.dice import Dice, Modifier
+from combatsim.rules import Rules
 
 
 class Ability(Modifier):
@@ -111,16 +112,6 @@ class Creature:
 
     __repr__ = __str__
 
-    def attack(self, other):
-        weapon = self.attacks[0]
-        roll = weapon[0].roll()[0]
-        if roll >= other.ac:
-            damage = weapon[1].roll()[0]
-            print(f"{self} hits {other} with {roll} doing {damage} damage")
-            other.hp -= damage
-        else:
-            print(f"{self} misses {other} with {roll}")
-
     def choose_target(self, others):
         for creature in others:
             if creature.hp > 0:
@@ -128,12 +119,11 @@ class Creature:
 
         return None
 
-    #def act(self, enemies, allies):
     def act(self, others):
         if not self.is_alive():
             return
         target = self.choose_target(others)
-        self.attack(target)
+        Rules.attack(self, target, self.attacks[0])
 
     def is_alive(self):
         return self.hp > 0
