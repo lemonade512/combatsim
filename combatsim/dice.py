@@ -28,28 +28,62 @@ class Modifier:
 
         return NotImplemented
 
+    def __eq__(self, other):
+        if not isinstance(other, Modifier):
+            return NotImplemented
+
+        return self.mod == other.mod
+
 
 class Dice:
 
     def __init__(self, dice, modifiers=None):
-        if isinstance(dice, str):
+        if not isinstance(dice,list):
             dice = [dice]
-        self.dice = dice
+
+        # Initialize dice, parsing strings as necessary
+        self.dice = []
+        for die in dice:
+            if isinstance(die, str):
+                self.dice.append(Dice._parse(die))
+            else:
+                self.dice.append(die)
 
         if not modifiers:
             modifiers = []
         self.modifiers = modifiers
 
+    def __eq__(self, other):
+        if not isinstance(other, Dice):
+            return NotImplemented
+
+        return self.dice == other.dice and self.modifiers == other.modifiers
+
     def __add__(self, other):
+        if isinstance(other, int):
+            return Dice(self.dice, self.modifiers + [Modifier(other)])
+
         if isinstance(other, Modifier):
             return Dice(self.dice, self.modifiers + [other])
 
         return NotImplemented
 
+    def __mul__(self, other):
+        if isinstance(other, int):
+            return Dice(self.dice * other, self.modifiers)
+
+        return NotImplemented
+
+    def __str__(self):
+        total_mod = sum(self.modifiers)
+        out = [f"{x}d{y} + {total_mod}" for x,y in self.dice]
+        return f"Dice({', '.join(out)})"
+
+    __repr__ = __str__
+
     def roll(self):
         output = []
-        for d in self.dice:
-            num, faces = Dice._parse(d)
+        for num, faces in self.dice:
             rolls = [random.randint(1, faces) for _ in range(num)]
             output.append(
                 sum(rolls) + sum(self.modifiers)
@@ -63,8 +97,7 @@ class Dice:
     @property
     def average(self):
         """ Calculates the expected value of a sum of dice """
-        parsed = [Dice._parse(d) for d in self.dice]
-        roll_average = sum([num * (faces + 1) / 2 for num, faces in parsed])
+        roll_average = sum([num * (faces + 1) / 2 for num, faces in self.dice])
         return roll_average + sum(self.modifiers)
 
     @staticmethod
@@ -86,6 +119,4 @@ class Dice:
 
 
 if __name__ == "__main__":
-    print(Dice.roll('1d20'))
-    print(Dice.roll(['1d6', 'd8', '2d10']))
-    print(Dice.sum(['2d6', '5d8']))
+    print(Dice(["1d20", "1d10"]) + Modifier(1))
