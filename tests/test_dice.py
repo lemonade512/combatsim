@@ -35,3 +35,11 @@ class TestDice(unittest.TestCase):
         self.assertEqual(dice.roll(), 2)
         modifier.mod = 2
         self.assertEqual(dice.roll(), 3)
+
+    def test_average_d6(self):
+        dice = Dice("d6")
+        self.assertEqual(dice.average, 3.5)
+
+    def test_average_with_modifiers(self):
+        dice = Dice("d6") + Modifier(1)
+        self.assertEqual(dice.average, 4.5)

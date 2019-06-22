@@ -51,9 +51,8 @@ class Dice:
         for d in self.dice:
             num, faces = Dice._parse(d)
             rolls = [random.randint(1, faces) for _ in range(num)]
-            modifiers = sum(self.modifiers)
             output.append(
-                sum(rolls) + modifiers
+                sum(rolls) + sum(self.modifiers)
             )
 
         if len(output) == 1:
@@ -61,30 +60,29 @@ class Dice:
         else:
             return output
 
-    @staticmethod
-    def avg(dice):
+    @property
+    def average(self):
         """ Calculates the expected value of a sum of dice """
-        if isinstance(dice, str):
-            dice = [dice]
-
-        parsed = [Dice._parse(d) for d in dice]
-        avg = sum([num * (faces + 1) / 2 for num, faces in parsed])
-        return avg
+        parsed = [Dice._parse(d) for d in self.dice]
+        roll_average = sum([num * (faces + 1) / 2 for num, faces in parsed])
+        return roll_average + sum(self.modifiers)
 
     @staticmethod
     def _parse(dice):
-        """ Parses a single 'dice' string such as 'd6' or '5d20' """
+        """ Parses a single 'dice' string such as 'd6' or '5d20'
+
+        Returns:
+            tuple: Two values (a, b) where `a` is the number of dice and `b`
+            is the number of faces on each die.
+        """
         splits = dice.split("d")
         if len(splits) != 2:
             raise Exception(f"Unparseable dice string: {dice}")
 
-        out = []
-        for n in splits:
-            try:
-                out.append(int(n))
-            except ValueError:
-                out.append(1)
-        return out
+        count, faces = splits
+        if count == "":
+            count = 1
+        return (int(count), int(faces))
 
 
 if __name__ == "__main__":
