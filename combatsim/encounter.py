@@ -1,4 +1,4 @@
-from dice import Dice
+from combatsim.dice import Dice
 
 class Encounter:
 
@@ -33,20 +33,16 @@ class Encounter:
             list: All creatures sorted in initiative order where the creature
             with the highest initiative roll is at index 0.
         """
-        initiative = []
-        for creature in self.creatures:
-            roll = Dice.roll('1d20') + creature.dexterity
-            initiative.append((roll, creature))
-
+        initiative = [(c.initiative.roll()[0], c) for c in self.creatures]
         initiative.sort(key=lambda x: x[0], reverse=True)
         return initiative
 
 
 if __name__ == "__main__":
-    from creature import Creature
+    from combatsim.creature import Creature
     e = Encounter([
         Creature(name="Fast Man", dexterity=25),
-        Creature(name="Commoner 1"),
+        Creature(name="Beefcake", strength=18),
         Creature(name="Commoner 2")
     ])
     e.run()

@@ -96,7 +96,9 @@ class Creature:
         # creature's dexterity. Also, figure out how to include temp spell
         # effects
         self.ac = kwargs.get('ac', 10)
-        self.initiative = Dice("d20") + self.dexterity
+        self.initiative = kwargs.get(
+            'initiative', Dice("d20") + self.dexterity
+        )
 
         # TODO (phillip): Implement weapons so that we can have attack damage
         # types, weapon names, and other attack options.
@@ -110,8 +112,14 @@ class Creature:
     __repr__ = __str__
 
     def attack(self, other):
-        print(f"{self} attacks {other}")
-        other.hp -= 5
+        weapon = self.attacks[0]
+        roll = weapon[0].roll()[0]
+        if roll >= other.ac:
+            damage = weapon[1].roll()[0]
+            print(f"{self} hits {other} with {roll} doing {damage} damage")
+            other.hp -= damage
+        else:
+            print(f"{self} misses {other} with {roll}")
 
     def choose_target(self, others):
         for creature in others:
