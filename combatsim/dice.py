@@ -88,17 +88,27 @@ class Dice:
             output.append(
                 sum(rolls) + sum(self.modifiers)
             )
-
-        if len(output) == 1:
-            return output[0]
-        else:
-            return output
+        return output
 
     @property
     def average(self):
         """ Calculates the expected value of a sum of dice """
-        roll_average = sum([num * (faces + 1) / 2 for num, faces in self.dice])
-        return roll_average + sum(self.modifiers)
+        return sum(
+            [
+                (num * (faces + 1) / 2) + sum(self.modifiers)
+                for num, faces in self.dice
+            ]
+        )
+
+    @property
+    def max(self):
+        """ Calculates the maximum sum of the dice """
+        return sum(
+            [
+                (num * faces) + sum(self.modifiers)
+                for num, faces in self.dice
+            ]
+        )
 
     @staticmethod
     def _parse(dice):

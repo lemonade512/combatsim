@@ -43,14 +43,39 @@ class Ability(Modifier):
 
 # TODO (phillip): Figure out a good way to specify base creature
 class Creature:
+    """ Definition of a creature and its stats.
+
+    Attributes:
+        name (str): The creatures name. This should be unique if you want to
+            tell different creatures apart when simulating an encounter.
+        level (int): The level of the creature. Level only really makes sense
+            for player characters and NPCs. Most creatures from the monster
+            manual will be "level 1" but have a meaningful challenge rating.
+        xp (int): How much xp this creature is worth.
+        proficiency (int): This is the creature's proficiency modifier. It can
+            be added to dice rolls that a creature is proficient in.
+        max_hp (int): Max HP of the creature.
+        hp (int): Current HP of the creature.
+        hd (Dice): The hit die used by this creature. This should not have any
+            modifiers attached to it. # TODO (phillip) I could maybe attach the
+            constitution modifier to this? The only downside I can think of is
+            that users will need to remember to add constitution modifier when
+            passing the hd into the __init__ method.
+        strength (Ability): Strength ability score
+        dexterity (Ability): Dexterity ability score
+        constitution (Ability): Constitution ability score
+        intelligence (Ability): Intelligence ability score
+        wisdom (Ability): Wisdom ability score
+        charisma (Ability): Charisma ability score
+    """
+
     def __init__(self, **kwargs):
         self.name = kwargs.get('name', "nameless")
-        self.level = kwargs.get('level', 0)
+        self.level = kwargs.get('level', 1)
         self.xp = kwargs.get('xp', None)
         self.proficiency = kwargs.get(
             'proficiency', 1 + math.ceil(self.level / 4)
         )
-        self.hp = kwargs.get('hp', 10)
         self.strength = Ability("Strength", kwargs.get('strength', 10))
         self.dexterity = Ability("Dexterity", kwargs.get('dexterity', 10))
         self.constitution = Ability(
@@ -61,6 +86,11 @@ class Creature:
         )
         self.wisdom = Ability("Wisdom", kwargs.get('wisdom', 10))
         self.charisma = Ability("Charisma", kwargs.get('charisma', 10))
+        self.hd = kwargs.get('hd', Dice('1d8'))
+
+        # Must come after hd and abilities so _calc_hp works properly
+        self.max_hp = kwargs.get('max_hp', self._calc_hp())
+        self.hp = self.max_hp
 
     def __str__(self):
         return f"{self.name}"
@@ -103,7 +133,32 @@ class Creature:
         out += f"  Cha: {self.charisma} ({self._ability_bonus(self.charisma)})"
         return out
 
+    def _calc_hp(self, average=False):
+        """ Calculate HP of this creature.
+
+        By default, this will roll for this creature's max hitpoints.
+
+        Args:
+            average (bool): Whether or not to take the average.
+        """
+        # TODO (phillip): HP is calculated somewhat differently for monsters
+        # than for PCs. Instead of level, monsters just have hit dice with
+        # a modifier, and they don't use the max for "first level". I should
+        # figure out a clean way to represent this difference. Inheritance of
+        # some sort might be the issue (monster and player both inherit from
+        # creature for instance)
+        #
+        # Note: It looks like most hit dice + mods for creatures are actually
+        # calculated from an underlying level that isn't exposed to the DM.
+        dice = self.hd + self.constitution
+        if average:
+            return round(dice.max + (dice * (self.level - 1)).average)
+
+        rolls = (dice * (self.level - 1)).roll()
+        return dice.max + sum(rolls)
+
 
 if __name__ == "__main__":
-    c = Creature()
-    print(c.stat_block)
+    c = Creature(hd=Dice("1d8"), level=5, constitution=12)
+    print(c._calc_hp(True))
+    print(c._calc_hp())
