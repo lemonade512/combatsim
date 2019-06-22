@@ -4,12 +4,6 @@ import math
 
 from combatsim.dice import Dice, Modifier
 
-# Attributes:
-#   Name, level, xp, proficiency, abilities, HD, HP,
-#   AC, initiative, attacks
-
-# Ignoring for now:
-#   spellcasting
 
 class Ability(Modifier):
     """ Abstraction around abilities. """
@@ -67,6 +61,12 @@ class Creature:
         intelligence (Ability): Intelligence ability score
         wisdom (Ability): Wisdom ability score
         charisma (Ability): Charisma ability score
+        ac (int): Armor class of the creature.
+        initiative (Dice): The dice + modifiers to roll for this creatures
+            initiative in combat.
+        attacks (list): A list of (Dice, Dice) tuples where the first value
+            is the dice to roll for the attack with modifiers, and the
+            second value is the damage dice to roll on a hit.
     """
 
     def __init__(self, **kwargs):
@@ -91,6 +91,18 @@ class Creature:
         # Must come after hd and abilities so _calc_hp works properly
         self.max_hp = kwargs.get('max_hp', self._calc_hp())
         self.hp = self.max_hp
+
+        # TODO (phillip): Make this calculated based on the armor worn and the
+        # creature's dexterity. Also, figure out how to include temp spell
+        # effects
+        self.ac = kwargs.get('ac', 10)
+        self.initiative = Dice("d20") + self.dexterity
+
+        # TODO (phillip): Implement weapons so that we can have attack damage
+        # types, weapon names, and other attack options.
+        self.attacks = kwargs.get(
+            'attacks', [(Dice("d20") + self.strength, Dice("d4") + self.strength)]
+        )
 
     def __str__(self):
         return f"{self.name}"
@@ -118,19 +130,19 @@ class Creature:
     def is_alive(self):
         return self.hp > 0
 
-    @staticmethod
-    def _ability_bonus(ability):
-        return math.floor(int(ability) / 2 - 5)
-
     @property
     def stat_block(self):
         out = f"Creature({self.name})\n"
-        out += f"\tStr: {self.strength} ({self._ability_bonus(self.strength)})"
-        out += f"  Dex: {self.dexterity} ({self._ability_bonus(self.dexterity)})"
-        out += f"  Con: {self.constitution} ({self._ability_bonus(self.constitution)})"
-        out += f"\n\tInt: {self.intelligence} ({self._ability_bonus(self.intelligence)})"
-        out += f"  Wis: {self.wisdom} ({self._ability_bonus(self.wisdom)})"
-        out += f"  Cha: {self.charisma} ({self._ability_bonus(self.charisma)})"
+        out += f"\t==Abilities==\n"
+        out += f"\t\tStr: {self.strength.value} ({self.strength.mod})"
+        out += f"  Dex: {self.dexterity.value} ({self.dexterity.mod})"
+        out += f"  Con: {self.constitution.value} ({self.constitution.mod})\n"
+        out += f"\t\tInt: {self.intelligence.value} ({self.intelligence.mod})"
+        out += f"  Wis: {self.wisdom.value} ({self.wisdom.mod})"
+        out += f"  Cha: {self.charisma.value} ({self.charisma.mod})\n"
+        out += f"\t==Attacks==\n"
+        for attack in self.attacks:
+            out += f"\t\t{attack}"
         return out
 
     def _calc_hp(self, average=False):
@@ -159,6 +171,5 @@ class Creature:
 
 
 if __name__ == "__main__":
-    c = Creature(hd=Dice("1d8"), level=5, constitution=12)
-    print(c._calc_hp(True))
-    print(c._calc_hp())
+    c = Creature(hd=Dice("1d8"), level=5, constitution=12, strength=15)
+    print(c.stat_block)
