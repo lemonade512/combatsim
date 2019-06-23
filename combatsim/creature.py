@@ -5,6 +5,7 @@ import math
 from combatsim.dice import Dice, Modifier
 from combatsim.rules import Rules
 from combatsim.tactics import TargetWeakest
+from combatsim.weapon import Weapon
 
 
 class Ability(Modifier):
@@ -47,10 +48,10 @@ class Creature:
     Attributes:
         name (str): The creatures name. This should be unique if you want to
             tell different creatures apart when simulating an encounter.
+        xp (int): How much xp this creature is worth.
         level (int): The level of the creature. Level only really makes sense
             for player characters and NPCs. Most creatures from the monster
             manual will be "level 1" but have a meaningful challenge rating.
-        xp (int): How much xp this creature is worth.
         proficiency (int): This is the creature's proficiency modifier. It can
             be added to dice rolls that a creature is proficient in.
         max_hp (int): Max HP of the creature.
@@ -76,8 +77,8 @@ class Creature:
 
     def __init__(self, **kwargs):
         self.name = kwargs.get('name', "nameless")
-        self.level = kwargs.get('level', 1)
         self.xp = kwargs.get('xp', None)
+        self.level = kwargs.get('level', 1)
         self.proficiency = kwargs.get(
             'proficiency', 1 + math.ceil(self.level / 4)
         )
@@ -116,7 +117,7 @@ class Creature:
         # TODO (phillip): Implement weapons so that we can have attack damage
         # types, weapon names, and other attack options.
         self.attacks = kwargs.get(
-            'attacks', [(Dice("d20") + self.strength, Dice("d4") + self.strength)]
+            'attacks', [Weapon('Dagger', 'strength', Dice('1d4'), 'piercing')]
         )
         self.tactics = kwargs.get('tactics', TargetWeakest(self))
         self.team = kwargs.get('team', None)
@@ -156,23 +157,44 @@ class Creature:
         Args:
             average (bool): Whether or not to take the average.
         """
-        # TODO (phillip): HP is calculated somewhat differently for monsters
-        # than for PCs. Instead of level, monsters just have hit dice with
-        # a modifier, and they don't use the max for "first level". I should
-        # figure out a clean way to represent this difference. Inheritance of
-        # some sort might be the issue (monster and player both inherit from
-        # creature for instance)
-        #
-        # Note: It looks like most hit dice + mods for creatures are actually
-        # calculated from an underlying level that isn't exposed to the DM.
+        raise NotImplementedError
+
+
+class Monster(Creature):
+    """ Represents NPCs or Monsters run by the DM.
+
+    There are a few differences in how monsters work from how player characters
+    work. For one, monster hitpoints are calculated from hit dice differently
+    than for players.
+    """
+
+    def _calc_hp(self, average=False):
+        dice = self.hd + self.constitution
+        if average:
+            return round((dice * self.level).average)
+
+        return sum((dice * self.level).roll())
+
+
+class Character(Creature):
+    """ Represents a player character.
+
+    Characters have all the attributes of a Creature, but also have a few
+    additional attributes as defined below.
+
+    Attributes:
+    """
+
+    def _calc_hp(self, average=False):
         dice = self.hd + self.constitution
         if average:
             return round(dice.max + (dice * (self.level - 1)).average)
 
-        rolls = (dice * (self.level - 1)).roll()
-        return dice.max + sum(rolls)
+        return dice.max + sum((dice * (self.level-1)).roll())
 
 
 if __name__ == "__main__":
-    c = Creature(hd=Dice("1d8"), level=5, constitution=12, strength=15)
-    print(c.stat_block)
+    c = Monster(hd=Dice("1d8"), level=6, constitution=15, strength=15)
+    p = Character(hd=Dice("1d8"), level=6, constitution=15)
+    print(c.max_hp)
+    print(p.max_hp)
