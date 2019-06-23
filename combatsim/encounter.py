@@ -40,9 +40,12 @@ class Encounter:
 
 if __name__ == "__main__":
     from combatsim.creature import Creature
+    from combatsim.weapon import Weapon
+    longsword = Weapon("Longsword", "strength", Dice("1d8"), "piercing")
+    fists = Weapon("Fists", "strength", Dice("1d4"), "bludgeoning")
     e = Encounter([
-        Creature(name="Fast Man", dexterity=25),
-        Creature(name="Beefcake", strength=18),
-        Creature(name="Commoner 2")
+        Creature(name="Fast Man", dexterity=25, attacks=[longsword]),
+        Creature(name="Beefcake", strength=18, attacks=[fists]),
+        Creature(name="Commoner 2", attacks=[fists])
     ])
     e.run()

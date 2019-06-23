@@ -22,6 +22,9 @@ class Ability(Modifier):
             value = Ability._to_value(modifier)
         self.value = value
 
+    def __str__(self):
+        return f"{self.value} ({self.mod})"
+
     @property
     def mod(self):
         return math.floor(int(self.value) / 2 - 5)
@@ -87,6 +90,14 @@ class Creature:
         )
         self.wisdom = Ability("Wisdom", kwargs.get('wisdom', 10))
         self.charisma = Ability("Charisma", kwargs.get('charisma', 10))
+        self.attributes = {
+            'strength': self.strength,
+            'dexterity': self.dexterity,
+            'constitution': self.constitution,
+            'intelligence': self.intelligence,
+            'wisdom': self.wisdom,
+            'charisma': self.charisma
+        }
         self.hd = kwargs.get('hd', Dice('1d8'))
 
         # Must come after hd and abilities so _calc_hp works properly
@@ -112,6 +123,10 @@ class Creature:
 
     __repr__ = __str__
 
+    def is_proficient(self, weapon):
+        # TODO (phillip): Implement this
+        return True
+
     def choose_target(self, others):
         for creature in others:
             if creature.hp > 0:
@@ -132,12 +147,12 @@ class Creature:
     def stat_block(self):
         out = f"Creature({self.name})\n"
         out += f"\t==Abilities==\n"
-        out += f"\t\tStr: {self.strength.value} ({self.strength.mod})"
-        out += f"  Dex: {self.dexterity.value} ({self.dexterity.mod})"
-        out += f"  Con: {self.constitution.value} ({self.constitution.mod})\n"
-        out += f"\t\tInt: {self.intelligence.value} ({self.intelligence.mod})"
-        out += f"  Wis: {self.wisdom.value} ({self.wisdom.mod})"
-        out += f"  Cha: {self.charisma.value} ({self.charisma.mod})\n"
+        out += f"\t\tStr: {self.strength}"
+        out += f"  Dex: {self.dexterity}"
+        out += f"  Con: {self.constitution}\n"
+        out += f"\t\tInt: {self.intelligence}"
+        out += f"  Wis: {self.wisdom}"
+        out += f"  Cha: {self.charisma}\n"
         out += f"\t==Attacks==\n"
         for attack in self.attacks:
             out += f"\t\t{attack}"
