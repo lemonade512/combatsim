@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from combatsim.dice import Dice
 
 class Encounter:
@@ -6,25 +8,27 @@ class Encounter:
         self.creatures = creatures
 
     def run(self):
+        print("==== BEGIN ENCOUNTER ====")
         initiative = self.roll_initiative()
         i = 0
         while True:
             current_creature = initiative[i][1]
-            current_creature.act([c for c in self.creatures if c != current_creature])
+            current_creature.tactics.act([c for c in self.creatures if c != current_creature])
             if self.encounter_over():
                 break
             i = (i + 1) % len(initiative)
 
+        print("\n==== END ENCOUNTER ====")
         for creature in self.creatures:
-            print(f"{creature}: {creature.hp}")
+            print(f"\t{creature}: {creature.hp}")
 
     def encounter_over(self):
-        alive = 0
+        teams = defaultdict(int)
         for creature in self.creatures:
-            if creature.hp > 0:
-                alive += 1
-
-        return alive <= 1
+            if not creature.is_alive():
+                continue
+            teams[creature.team] += 1
+        return len(teams) <= 1 and teams[None] <= 1
 
     def roll_initiative(self):
         """ Rolls initiative for all creatures in the encounter.
@@ -44,8 +48,9 @@ if __name__ == "__main__":
     longsword = Weapon("Longsword", "strength", Dice("1d8"), "piercing")
     fists = Weapon("Fists", "strength", Dice("1d4"), "bludgeoning")
     e = Encounter([
-        Creature(name="Fast Man", dexterity=25, attacks=[longsword]),
-        Creature(name="Beefcake", strength=18, attacks=[fists]),
-        Creature(name="Commoner 2", attacks=[fists])
+        Creature(name="Fast Man", strength=12, dexterity=25, attacks=[longsword], team="a"),
+        Creature(name="Beefcake", strength=18, attacks=[fists], team="a"),
+        Creature(name="Commoner 2", attacks=[fists], team="a"),
+        Creature(name="Knight", strength=14, dexterity=14, attacks=[longsword], ac=18)
     ])
     e.run()

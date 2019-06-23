@@ -4,6 +4,7 @@ import math
 
 from combatsim.dice import Dice, Modifier
 from combatsim.rules import Rules
+from combatsim.tactics import TargetWeakest
 
 
 class Ability(Modifier):
@@ -117,6 +118,8 @@ class Creature:
         self.attacks = kwargs.get(
             'attacks', [(Dice("d20") + self.strength, Dice("d4") + self.strength)]
         )
+        self.tactics = kwargs.get('tactics', TargetWeakest(self))
+        self.team = kwargs.get('team', None)
 
     def __str__(self):
         return f"{self.name}"
@@ -126,19 +129,6 @@ class Creature:
     def is_proficient(self, weapon):
         # TODO (phillip): Implement this
         return True
-
-    def choose_target(self, others):
-        for creature in others:
-            if creature.hp > 0:
-                return creature
-
-        return None
-
-    def act(self, others):
-        if not self.is_alive():
-            return
-        target = self.choose_target(others)
-        Rules.attack(self, target, self.attacks[0])
 
     def is_alive(self):
         return self.hp > 0
