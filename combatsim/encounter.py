@@ -8,7 +8,11 @@ class Encounter:
         self.creatures = creatures
 
     def run(self):
-        print("==== BEGIN ENCOUNTER ====")
+        print("==== Combatants ====")
+        for creature in self.creatures:
+            print(f"{creature}: {creature.hp}")
+
+        print("\n==== BEGIN ENCOUNTER ====")
         initiative = self.roll_initiative()
         i = 0
         while True:
@@ -43,14 +47,18 @@ class Encounter:
 
 
 if __name__ == "__main__":
-    from combatsim.creature import Creature
+    from combatsim.creature import Monster
     from combatsim.weapon import Weapon
-    longsword = Weapon("Longsword", "strength", Dice("1d8"), "piercing")
+    longsword = Weapon("Longsword", "strength", Dice("1d8"), "slashing")
     fists = Weapon("Fists", "strength", Dice("1d4"), "bludgeoning")
+    #e = Encounter([
+    #    Monster(name="Fast Man", strength=12, dexterity=25, attacks=[longsword], team="a"),
+    #    Monster(name="Beefcake", strength=18, attacks=[fists], team="a"),
+    #    Monster(name="Commoner 2", attacks=[fists], team="a", resistances=["slashing", "piercing"]),
+    #    Monster(name="Knight", strength=14, dexterity=14, attacks=[longsword], ac=18)
+    #])
     e = Encounter([
-        Creature(name="Fast Man", strength=12, dexterity=25, attacks=[longsword], team="a"),
-        Creature(name="Beefcake", strength=18, attacks=[fists], team="a"),
-        Creature(name="Commoner 2", attacks=[fists], team="a"),
-        Creature(name="Knight", strength=14, dexterity=14, attacks=[longsword], ac=18)
+        Monster(name="Commoner", attacks=[fists], resistances=["slashing"]),
+        Monster(name="Knight", strength=14, attacks=[longsword], ac=14)
     ])
     e.run()

@@ -121,6 +121,7 @@ class Creature:
         )
         self.tactics = kwargs.get('tactics', TargetWeakest(self))
         self.team = kwargs.get('team', None)
+        self.resistances = kwargs.get('resistances', [])
 
     def __str__(self):
         return f"{self.name}"
