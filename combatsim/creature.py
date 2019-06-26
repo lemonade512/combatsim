@@ -119,9 +119,17 @@ class Creature:
         self.attacks = kwargs.get(
             'attacks', [Weapon('Dagger', 'strength', Dice('1d4'), 'piercing')]
         )
-        self.tactics = kwargs.get('tactics', TargetWeakest(self))
+        self.tactics = kwargs.get('tactics', TargetWeakest)(self)
         self.team = kwargs.get('team', None)
         self.resistances = kwargs.get('resistances', [])
+        self.spellcasting = self.attributes[
+            kwargs.get('spellcasting', 'wisdom')
+        ]
+        self.spells = kwargs.get('spells', [])
+        self.spell_slots = {
+            1: 4,
+            2: 4
+        }
 
     def __str__(self):
         return f"{self.name}"
@@ -159,6 +167,11 @@ class Creature:
             average (bool): Whether or not to take the average.
         """
         raise NotImplementedError
+
+    def heal(self, value):
+        add = min(self.max_hp - self.hp, value)
+        self.hp += add
+        return add
 
 
 class Monster(Creature):

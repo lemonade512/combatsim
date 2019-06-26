@@ -1,12 +1,12 @@
 import unittest
 
-from combatsim.creature import Ability, Creature
+from combatsim.creature import Ability, Creature, Monster
 
 
 class TestCreature(unittest.TestCase):
 
     def test_ability_modifiers_computed_from_abilties(self):
-        creature = Creature(
+        creature = Monster(
             strength=4,
             dexterity=5,
             constitution=6,
@@ -20,6 +20,12 @@ class TestCreature(unittest.TestCase):
         self.assertEqual(creature.intelligence.mod, 2)
         self.assertEqual(creature.wisdom.mod, 3)
         self.assertEqual(creature.charisma.mod, 6)
+
+    def test_max_heal_for_creature(self):
+        creature = Monster()
+        creature.hp -= 1
+        creature.heal(5000)
+        self.assertEqual(creature.hp, creature.max_hp)
 
 
 class TestAbility(unittest.TestCase):

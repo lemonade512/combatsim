@@ -38,3 +38,22 @@ class TargetWeakest(BaseTactics):
                 target = creature
 
         Rules.attack(self.actor, target, self.actor.attacks[0])
+
+
+class Healer(TargetWeakest):
+
+    def act(self, creatures):
+        if not self.actor.is_alive():
+            return
+
+        if self.actor.spell_slots[1] == 0:
+            return super().act(creatures)
+
+        if self.actor.hp < self.actor.max_hp:
+            return Rules.cast(self.actor, 1, self.actor.spells[0], target=self.actor)
+
+        for creature in self.allies(creatures):
+            if creature.hp < creature.max_hp:
+                return Rules.cast(self.actor, 1, self.actor.spells[0], target=creature)
+
+        return super().act(creatures)

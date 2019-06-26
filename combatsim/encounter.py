@@ -1,6 +1,8 @@
 from collections import defaultdict
 
 from combatsim.dice import Dice
+from combatsim.tactics import Healer
+from combatsim.spells import CureWounds
 
 class Encounter:
 
@@ -58,7 +60,8 @@ if __name__ == "__main__":
     #    Monster(name="Knight", strength=14, dexterity=14, attacks=[longsword], ac=18)
     #])
     e = Encounter([
-        Monster(name="Commoner", attacks=[fists], resistances=["slashing"]),
-        Monster(name="Knight", strength=14, attacks=[longsword], ac=14)
+        Monster(name="Healer", attacks=[fists], spells=[CureWounds], level=5, tactics=Healer, team=1),
+        Monster(name="Commoner", attacks=[fists], resistances=["slashing"], level=5, team=1),
+        Monster(name="Knight", strength=14, attacks=[longsword], ac=14, level=5)
     ])
     e.run()
