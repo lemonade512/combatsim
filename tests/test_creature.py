@@ -1,12 +1,20 @@
 import unittest
 
-from combatsim.creature import Ability, Creature, Monster
+from combatsim.creature import Ability, Creature, Monster, RulesError
+from combatsim.spells import Spell
+
+
+class DummySpell(Spell):
+    min_level = 1
+
+    def cast(self):
+        pass
 
 
 class TestCreature(unittest.TestCase):
 
     def test_ability_modifiers_computed_from_abilties(self):
-        creature = Monster(
+        creature = Creature(
             strength=4,
             dexterity=5,
             constitution=6,
@@ -22,10 +30,28 @@ class TestCreature(unittest.TestCase):
         self.assertEqual(creature.charisma.mod, 6)
 
     def test_max_heal_for_creature(self):
-        creature = Monster()
+        creature = Creature(max_hp=5)
         creature.hp -= 1
         creature.heal(5000)
         self.assertEqual(creature.hp, creature.max_hp)
+
+    def test_cast_spell_depletes_spell_slot(self):
+        creature = Creature(spell_slots=[1], spells=[DummySpell])
+        creature.cast(DummySpell, 1)
+        self.assertEqual(creature.spell_slots[0], 0)
+
+    def test_cast_spell_without_spell_slot_raises_error(self):
+        creature = Creature(spells=[DummySpell])
+        self.assertRaises(RulesError, creature.cast, DummySpell, 1)
+
+    def test_cast_too_many_spells_raises_error(self):
+        creature = Creature(spell_slots=[1], spells=[DummySpell])
+        creature.cast(DummySpell, 1)
+        self.assertRaises(RulesError, creature.cast, DummySpell, 1)
+
+    def test_cast_spell_not_in_creature_spell_list_raises_error(self):
+        creature = Creature(spell_slots=[1], spells=[])
+        self.assertRaises(RulesError, creature.cast, DummySpell, 1)
 
 
 class TestAbility(unittest.TestCase):

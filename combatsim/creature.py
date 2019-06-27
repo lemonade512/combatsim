@@ -3,9 +3,13 @@
 import math
 
 from combatsim.dice import Dice, Modifier
-from combatsim.rules import Rules
 from combatsim.tactics import TargetWeakest
 from combatsim.weapon import Weapon
+
+
+class RulesError(Exception):
+    """ Exception raised when a rule is broken. """
+    pass
 
 
 class Ability(Modifier):
@@ -126,10 +130,7 @@ class Creature:
             kwargs.get('spellcasting', 'wisdom')
         ]
         self.spells = kwargs.get('spells', [])
-        self.spell_slots = {
-            1: 4,
-            2: 4
-        }
+        self.spell_slots = kwargs.get('spell_slots', [])
 
     def __str__(self):
         return f"{self.name}"
@@ -166,7 +167,11 @@ class Creature:
         Args:
             average (bool): Whether or not to take the average.
         """
-        raise NotImplementedError
+        dice = self.hd + self.constitution
+        if average:
+            return round((dice * self.level).average)
+
+        return sum((dice * self.level).roll())
 
     def attack(self, target, weapon):
         # TODO (phillip): These rules work well for PCs, but some monsters
@@ -183,6 +188,38 @@ class Creature:
             print(f"{self} hits {target} with {weapon.name} doing {damage_taken} damage")
         else:
             print(f"{self} misses {target} with {weapon.name}")
+
+    def cast(self, spell, level, *args, **kwargs):
+        """ Casts a spell.
+
+        Args:
+            caster (Creature): The creature that is casting the spell.
+            level (int): The level this spell is being cast at.
+            spell (type): The class of spell being cast.
+        """
+        if spell not in self.spells:
+            raise RulesError(
+                f"{self} does not know the spell `{spell}`"
+            )
+
+        if level > 0:
+            if len(self.spell_slots) < level:
+                raise RulesError(
+                    f"{self} does not have any level {level} spell slots"
+                )
+            if self.spell_slots[level-1] < 1:
+                raise RulesError(
+                    f"{self} has no more level {level} spell slots"
+                )
+            self.spell_slots[level-1] -= 1
+
+        if spell.min_level > level:
+            raise RulesError(
+                f"{spell.__name__} must be cast at level {spell.min_level} but "
+                f"was cast at level {level}"
+            )
+
+        spell(self, level).cast(*args, **kwargs)
 
     def take_damage(self, value, type_=None):
         """ Take damage of a given type.
@@ -223,13 +260,7 @@ class Monster(Creature):
     work. For one, monster hitpoints are calculated from hit dice differently
     than for players.
     """
-
-    def _calc_hp(self, average=False):
-        dice = self.hd + self.constitution
-        if average:
-            return round((dice * self.level).average)
-
-        return sum((dice * self.level).roll())
+    pass
 
 
 class Character(Creature):

@@ -60,7 +60,10 @@ if __name__ == "__main__":
     #    Monster(name="Knight", strength=14, dexterity=14, attacks=[longsword], ac=18)
     #])
     e = Encounter([
-        Monster(name="Healer", attacks=[fists], spells=[CureWounds], level=5, tactics=Healer, team=1),
+        Monster(
+            name="Healer", attacks=[fists], spell_slots=[3],
+            spells=[CureWounds], level=5, tactics=Healer, team=1
+        ),
         Monster(name="Commoner", attacks=[fists], resistances=["slashing"], level=5, team=1),
         Monster(name="Knight", strength=14, attacks=[longsword], ac=14, level=5)
     ])
