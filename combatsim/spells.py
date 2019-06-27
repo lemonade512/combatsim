@@ -2,6 +2,21 @@
 
 from combatsim.dice import Dice
 
+# Example Spell:
+#   level: 1
+#   casting time: Reaction
+#   range: self, 30 ft., 40 ft. cube
+#   components
+#
+
+# Spell Types:
+#   1) Instantaneous offensive AoE spells (eg. fireball)
+#   2) Reactionary defensive spells (eg. shield, counterspell)
+#   3) Instantaneous offensive targeted spells (eg. acid arrow)
+#   4) ...
+
+# TODO event oriented programming. Spell effects can subscribe to "move" events from a character.
+
 
 class Spell:
     """ Parent class for all spells.
