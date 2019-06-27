@@ -37,7 +37,7 @@ class TargetWeakest(BaseTactics):
             elif creature.hp > 0 and creature.hp < target.hp:
                 target = creature
 
-        Rules.attack(self.actor, target, self.actor.attacks[0])
+        self.actor.attack(target, self.actor.attacks[0])
 
 
 class Healer(TargetWeakest):

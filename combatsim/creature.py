@@ -168,6 +168,48 @@ class Creature:
         """
         raise NotImplementedError
 
+    def attack(self, target, weapon):
+        # TODO (phillip): These rules work well for PCs, but some monsters
+        # don't follow these rules for calculating the modifier when rolling to
+        # hit. Perhaps, I should just include the "to-hit" bonus with the
+        # weapon? Or maybe add it as part of an "attack" object?
+        attack_dice = Dice("d20") + self.attributes[weapon.ability]
+        if self.is_proficient(weapon):
+            attack_dice += self.proficiency
+        roll = attack_dice.roll()[0]
+        if roll >= target.ac:
+            damage = (weapon.damage + self.attributes[weapon.ability]).roll()[0]
+            damage_taken = target.take_damage(damage, weapon.damage_type)
+            print(f"{self} hits {target} with {weapon.name} doing {damage_taken} damage")
+        else:
+            print(f"{self} misses {target} with {weapon.name}")
+
+    def take_damage(self, value, type_=None):
+        """ Take damage of a given type.
+
+        This function will check for resistances and other effects to calculate
+        the actual damage taken. When damage reduces the creature to 0 HP, and
+        there is damage remaining, the creature dies if the remaining damage
+        equals or exceeds its hitpoint maximum.
+
+        Returns:
+            str: A string representing the damage taken after resistances.
+        """
+        if type_ in self.resistances:
+            taken = math.floor(value / 2)
+            expression = f"{value} / 2 = {taken}"
+        else:
+            taken = value
+            expression = f"{value}"
+
+        self.hp -= taken
+        if self.hp < -self.max_hp:
+            # TODO (phillip): Implement creature death
+            pass
+
+        self.hp = max(0, self.hp)
+        return expression
+
     def heal(self, value):
         add = min(self.max_hp - self.hp, value)
         self.hp += add
