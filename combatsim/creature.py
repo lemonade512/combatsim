@@ -4,7 +4,7 @@ import math
 
 from combatsim.dice import Dice, Modifier
 from combatsim.tactics import TargetWeakest
-from combatsim.weapon import Weapon
+from combatsim.attacks import Attack
 
 
 class RulesError(Exception):
@@ -120,9 +120,10 @@ class Creature:
 
         # TODO (phillip): Implement weapons so that we can have attack damage
         # types, weapon names, and other attack options.
-        self.attacks = kwargs.get(
-            'attacks', [Weapon('Dagger', 'strength', Dice('1d4'), 'piercing')]
-        )
+        self.attacks = []
+        fists = Attack('Fists', Dice('1d4'), 'bludgeoning')
+        for attack in kwargs.get('attacks', [fists]):
+            self.equip(attack)
         self.tactics = kwargs.get('tactics', TargetWeakest)(self)
         self.team = kwargs.get('team', None)
         self.resistances = kwargs.get('resistances', [])
@@ -138,8 +139,7 @@ class Creature:
     __repr__ = __str__
 
     def is_proficient(self, weapon):
-        # TODO (phillip): Implement this
-        return True
+        raise NotImplementedError
 
     def is_alive(self):
         return self.hp > 0
@@ -173,21 +173,14 @@ class Creature:
 
         return sum((dice * self.level).roll())
 
-    def attack(self, target, weapon):
-        # TODO (phillip): These rules work well for PCs, but some monsters
-        # don't follow these rules for calculating the modifier when rolling to
-        # hit. Perhaps, I should just include the "to-hit" bonus with the
-        # weapon? Or maybe add it as part of an "attack" object?
-        attack_dice = Dice("d20") + self.attributes[weapon.ability]
-        if self.is_proficient(weapon):
-            attack_dice += self.proficiency
-        roll = attack_dice.roll()[0]
-        if roll >= target.ac:
-            damage = (weapon.damage + self.attributes[weapon.ability]).roll()[0]
-            damage_taken = target.take_damage(damage, weapon.damage_type)
-            print(f"{self} hits {target} with {weapon.name} doing {damage_taken} damage")
+    def attack(self, target, attack):
+        attack_roll, crit = attack.attack_roll()
+        if attack_roll >= target.ac:
+            damage, damage_type = attack.damage_roll(crit=crit)
+            damage_taken = target.take_damage(damage, damage_type)
+            print(f"{self} hits {target} with {attack.name} doing {damage_taken} damage")
         else:
-            print(f"{self} misses {target} with {weapon.name}")
+            print(f"{self} misses {target} with {attack.name}")
 
     def cast(self, spell, level, *args, **kwargs):
         """ Casts a spell.
@@ -252,6 +245,10 @@ class Creature:
         self.hp += add
         return add
 
+    def equip(self, weapon):
+        weapon.owner = self
+        self.attacks.append(weapon)
+
 
 class Monster(Creature):
     """ Represents NPCs or Monsters run by the DM.
@@ -260,7 +257,10 @@ class Monster(Creature):
     work. For one, monster hitpoints are calculated from hit dice differently
     than for players.
     """
-    pass
+
+    def is_proficient(self, weapon):
+        # TODO (phillip): Implement this
+        return False
 
 
 class Character(Creature):
@@ -271,6 +271,10 @@ class Character(Creature):
 
     Attributes:
     """
+
+    def is_proficient(self, weapon):
+        # TODO (phillip): Implement this
+        return True
 
     def _calc_hp(self, average=False):
         dice = self.hd + self.constitution

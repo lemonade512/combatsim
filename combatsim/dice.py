@@ -34,6 +34,21 @@ class Modifier:
 
         return self.mod == other.mod
 
+    def __ne__(self, other):
+        return not (self == other)
+
+    def __gt__(self, other):
+        return self.mod > other.mod
+
+    def __lt__(self, other):
+        return self.mod < other.mod
+
+    def __le__(self, other):
+        return self.mod <= other.mod
+
+    def __ge__(self, other):
+        return self.mod >= other.mod
+
 
 class Dice:
 

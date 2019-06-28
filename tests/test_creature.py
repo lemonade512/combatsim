@@ -71,3 +71,15 @@ class TestAbility(unittest.TestCase):
         def _assign():
             ability.mod = 5
         self.assertRaises(AttributeError, _assign)
+
+    def test_compare_abilities_with_same_mod(self):
+        strength = Ability("Strength", 10)
+        dexterity = Ability("Dexterity", 11)
+        self.assertTrue(dexterity == strength)
+        self.assertTrue(strength == dexterity)
+
+    def test_compare_abilities_with_different_mods(self):
+        strength = Ability("Strength", 10)
+        dexterity = Ability("Dexterity", 12)
+        self.assertTrue(dexterity > strength)
+        self.assertTrue(strength < dexterity)
