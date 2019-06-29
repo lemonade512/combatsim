@@ -114,10 +114,11 @@ class Creature:
         self.max_hp = kwargs.get('max_hp', self._calc_hp())
         self.hp = self.max_hp
 
+        armor = kwargs.get('armor', None)
         if 'ac' in kwargs:
-            self.armor = Armor("Default", kwargs['ac'], 0)
-        else:
-            self.armor = kwargs.get('armor', None)
+            armor = Armor("Default", kwargs['ac'], 0)
+        self.armor = armor
+
         self.initiative = kwargs.get(
             'initiative', Dice("d20") + self.dexterity
         )
