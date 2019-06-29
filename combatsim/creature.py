@@ -5,6 +5,7 @@ import math
 from combatsim.dice import Dice, Modifier
 from combatsim.tactics import TargetWeakest
 from combatsim.attacks import Attack
+from combatsim.items import Armor
 
 
 class RulesError(Exception):
@@ -29,7 +30,7 @@ class Ability(Modifier):
         self.value = value
 
     def __str__(self):
-        return f"{self.value} ({self.mod})"
+        return f"Ability({self.value}, ({self.mod}))"
 
     @property
     def mod(self):
@@ -71,7 +72,10 @@ class Creature:
         intelligence (Ability): Intelligence ability score
         wisdom (Ability): Wisdom ability score
         charisma (Ability): Charisma ability score
-        ac (int): Armor class of the creature.
+        ac (int): Armor class of the creature. By default, this number is the
+            creature's base AC. However, if the creature is wearing armor, then
+            it is the armor's base AC + the creature's dexterity. The max dex
+            bonus for the armor is also taken into account.
         initiative (Dice): The dice + modifiers to roll for this creatures
             initiative in combat.
         attacks (list): A list of (Dice, Dice) tuples where the first value
@@ -110,10 +114,10 @@ class Creature:
         self.max_hp = kwargs.get('max_hp', self._calc_hp())
         self.hp = self.max_hp
 
-        # TODO (phillip): Make this calculated based on the armor worn and the
-        # creature's dexterity. Also, figure out how to include temp spell
-        # effects
-        self.ac = kwargs.get('ac', 10)
+        if 'ac' in kwargs:
+            self.armor = Armor("Default", kwargs['ac'], 0)
+        else:
+            self.armor = kwargs.get('armor', None)
         self.initiative = kwargs.get(
             'initiative', Dice("d20") + self.dexterity
         )
@@ -137,6 +141,29 @@ class Creature:
         return f"{self.name}"
 
     __repr__ = __str__
+
+    @property
+    def ac(self):
+        """ Calculated value of this creature's Armor Class.
+
+        By default, this will simply be the Base AC for the creature, which
+        allows us to specify the AC of any creature without worrying about
+        what kind of armor they are wearing.
+
+        If a creature does wear armor, or you want to specify the type of
+        armor that a creature is wearing, then this function will calculate
+        armor class from the item in the `armor` attribute and the dex mod.
+
+            >>> chain = Armor("Chain Shirt", 13, 2)
+            >>> Creature(armor=Armor("Natural", 15, 0)).ac == 15
+            >>> Creature(armor=chain).ac == 13
+            >>> Creature(armor=chain, dexterity=15).ac == 15
+            >>> Creature(armor=chain, dexterity=20).ac == 15
+        """
+        if self.armor:
+            return self.armor.base_ac + min(self.armor.max_dex, self.dexterity)
+
+        return 10 + self.dexterity
 
     def is_proficient(self, weapon):
         raise NotImplementedError
@@ -285,7 +312,7 @@ class Character(Creature):
 
 
 if __name__ == "__main__":
-    c = Monster(hd=Dice("1d8"), level=6, constitution=15, strength=15)
-    p = Character(hd=Dice("1d8"), level=6, constitution=15)
-    print(c.max_hp)
-    print(p.max_hp)
+    strength1 = Ability("Strength", 12)
+    strength2 = Modifier(2)
+    strength1 += strength2
+    print(strength1)

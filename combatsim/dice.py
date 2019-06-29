@@ -12,6 +12,9 @@ class Modifier:
         if isinstance(other, int):
             return other + self.mod
 
+        if isinstance(other, Modifier):
+            return Modifier(self.mod + other.mod)
+
         return NotImplemented
 
     __radd__ = __add__
@@ -38,16 +41,43 @@ class Modifier:
         return not (self == other)
 
     def __gt__(self, other):
-        return self.mod > other.mod
+        if isinstance(other, int):
+            return self.mod > other
+
+        if isinstance(other, Modifier):
+            return self.mod > other.mod
+
+        return NotImplemented
 
     def __lt__(self, other):
-        return self.mod < other.mod
+        if isinstance(other, int):
+            return self.mod < other
+
+        if isinstance(other, Modifier):
+            return self.mod < other.mod
+
+        return NotImplemented
 
     def __le__(self, other):
-        return self.mod <= other.mod
+        if isinstance(other, int):
+            return self.mod <= other
+
+        if isinstance(other, Modifier):
+            return self.mod <= other.mod
+
+        return NotImplemented
 
     def __ge__(self, other):
-        return self.mod >= other.mod
+        if isinstance(other, int):
+            return self.mod >= other
+
+        if isinstance(other, Modifier):
+            return self.mod >= other.mod
+
+        return NotImplemented
+
+    def __str__(self):
+        return f"Modifier({self.mod})"
 
 
 class Dice:

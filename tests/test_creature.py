@@ -1,7 +1,9 @@
 import unittest
 
+from combatsim.items import Armor
 from combatsim.creature import Ability, Creature, Monster, RulesError
 from combatsim.spells import Spell
+from combatsim.dice import Modifier
 
 
 class DummySpell(Spell):
@@ -53,6 +55,18 @@ class TestCreature(unittest.TestCase):
         creature = Creature(spell_slots=[1], spells=[])
         self.assertRaises(RulesError, creature.cast, DummySpell, 1)
 
+    def test_default_ac_is_10_plus_dex_mod(self):
+        creature = Creature(dexterity=15)
+        self.assertEqual(creature.ac, 12)
+
+    def test_ac_can_be_set_directly(self):
+        creature = Creature(ac=14)
+        self.assertEqual(creature.ac, 14)
+
+    def test_ac_set_with_armor_with_no_dex_bonus(self):
+        creature = Creature(armor=Armor("Natural", 12, 0), dexterity=15)
+        self.assertEqual(creature.ac, 12)
+
 
 class TestAbility(unittest.TestCase):
 
@@ -83,3 +97,9 @@ class TestAbility(unittest.TestCase):
         dexterity = Ability("Dexterity", 12)
         self.assertTrue(dexterity > strength)
         self.assertTrue(strength < dexterity)
+
+    def test_add_modifier_to_ability_returns_modifier(self):
+        strength = Ability("Strength", 12)
+        mod = Modifier(2)
+        self.assertIsInstance(strength + mod, Modifier)
+        self.assertEqual(strength + mod, Modifier(3))
