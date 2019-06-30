@@ -50,15 +50,15 @@ class Encounter:
 
 if __name__ == "__main__":
     from combatsim.creature import Monster
-    from combatsim.attacks import Attack
-    longsword = Attack("Longsword", Dice("1d8"), "slashing")
-    fists = Attack("Fists", Dice("1d4"), "bludgeoning")
+    from combatsim.items import Weapon
+    longsword = Weapon("Longsword", Dice("1d8"), "slashing")
+    fists = Weapon("Fists", Dice("1d4"), "bludgeoning")
     e = Encounter([
         Monster(
-            name="Healer", attacks=[fists], spell_slots=[3],
+            name="Healer", spell_slots=[3],
             spells=[CureWounds], level=5, tactics=Healer, team=1
         ),
-        Monster(name="Commoner", attacks=[fists], resistances=["slashing"], level=5, team=1),
-        Monster(name="Knight", strength=14, attacks=[longsword], ac=14, level=5)
+        Monster(name="Commoner", weapons=[fists], resistances=["slashing"], level=5, team=1),
+        Monster(name="Knight", strength=14, weapons=[longsword], ac=14, level=5)
     ])
     e.run()

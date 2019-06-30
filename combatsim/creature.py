@@ -4,8 +4,7 @@ import math
 
 from combatsim.dice import Dice, Modifier
 from combatsim.tactics import TargetWeakest
-from combatsim.attacks import Attack
-from combatsim.items import Armor
+from combatsim.items import Armor, Weapon
 
 
 class RulesError(Exception):
@@ -114,21 +113,25 @@ class Creature:
         self.max_hp = kwargs.get('max_hp', self._calc_hp())
         self.hp = self.max_hp
 
+        self.armor = None
         armor = kwargs.get('armor', None)
         if 'ac' in kwargs:
             armor = Armor("Default", kwargs['ac'], 0)
-        self.armor = armor
+        self.equip(armor)
 
         self.initiative = kwargs.get(
             'initiative', Dice("d20") + self.dexterity
         )
 
-        # TODO (phillip): Implement weapons so that we can have attack damage
-        # types, weapon names, and other attack options.
-        self.attacks = []
-        fists = Attack('Fists', Dice('1d4'), 'bludgeoning')
-        for attack in kwargs.get('attacks', [fists]):
-            self.equip(attack)
+        # TODO (phillip): This part looks very similar to the armor part above.
+        # Is there a way we can make this more elegant for both?
+        self.weapons = []
+        weapons = kwargs.get('weapons', [])
+        for weapon in weapons:
+            self.equip(weapon)
+        if not self.weapons:
+            self.equip(Weapon("Fists", Dice("1d4"), "bludgeoning"))
+
         self.tactics = kwargs.get('tactics', TargetWeakest)(self)
         self.team = kwargs.get('team', None)
         self.resistances = kwargs.get('resistances', [])
@@ -162,8 +165,7 @@ class Creature:
             >>> Creature(armor=chain, dexterity=20).ac == 15
         """
         if self.armor:
-            return self.armor.base_ac + min(self.armor.max_dex, self.dexterity)
-
+            return self.armor.ac
         return 10 + self.dexterity
 
     def is_proficient(self, weapon):
@@ -273,9 +275,10 @@ class Creature:
         self.hp += add
         return add
 
-    def equip(self, weapon):
-        weapon.owner = self
-        self.attacks.append(weapon)
+    def equip(self, item):
+        if not item:
+            return
+        item.equip(self)
 
 
 class Monster(Creature):
@@ -310,10 +313,3 @@ class Character(Creature):
             return round(dice.max + (dice * (self.level - 1)).average)
 
         return dice.max + sum((dice * (self.level-1)).roll())
-
-
-if __name__ == "__main__":
-    strength1 = Ability("Strength", 12)
-    strength2 = Modifier(2)
-    strength1 += strength2
-    print(strength1)
