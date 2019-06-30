@@ -1,9 +1,9 @@
 import unittest
 
 from combatsim.items import Armor
-from combatsim.creature import Ability, Creature, Monster, RulesError
+from combatsim.creature import Ability, Creature, Monster, RulesError, Character
 from combatsim.spells import Spell
-from combatsim.dice import Modifier
+from combatsim.dice import Dice, Modifier
 
 
 class DummySpell(Spell):
@@ -66,6 +66,42 @@ class TestCreature(unittest.TestCase):
     def test_ac_set_with_armor_with_no_dex_bonus(self):
         creature = Creature(armor=Armor("Natural", 12, 0), dexterity=15)
         self.assertEqual(creature.ac, 12)
+
+    def test_create_creature_from_base(self):
+        base = {
+            'name': "Test",
+            'strength': 12,
+            'dexterity': 12,
+            'constitution': 13,
+            'wisdom': 12,
+            'intelligence': 12,
+            'charisma': 14
+        }
+        creature = Monster.from_base(base)
+        self.assertEqual(creature.strength, Ability("Strength", 12))
+        self.assertEqual(creature.charisma, Ability("Charisma", 14))
+        self.assertEqual(creature.name, "Test")
+
+    def test_create_creature_from_base_with_customizations(self):
+        base = {
+            'name': "Test",
+            'strength': 12,
+            'dexterity': 15
+        }
+        creature = Monster.from_base(base, name="New Creature")
+        self.assertEqual(creature.name, "New Creature")
+        self.assertEqual(creature.strength, Ability("Strength", 12))
+
+    def test_creature_max_hp_is_at_least_1(self):
+        creature = Creature(level=1, hd=Dice("1d1"), constitution=2)
+        self.assertEqual(creature.max_hp, 1)
+
+
+class TestCharacter(unittest.TestCase):
+
+    def test_player_max_hp_is_at_least_1(self):
+        player = Character(level=1, hd=Dice("1d1"), constitution=2)
+        self.assertEqual(player.max_hp, 1)
 
 
 class TestAbility(unittest.TestCase):

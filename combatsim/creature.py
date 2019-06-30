@@ -82,6 +82,13 @@ class Creature:
             second value is the damage dice to roll on a hit.
     """
 
+    @classmethod
+    def from_base(cls, base, **kwargs):
+        """ Creates new monster from base template. """
+        template = base
+        base.update(kwargs)
+        return cls(**template)
+
     def __init__(self, **kwargs):
         self.name = kwargs.get('name', "nameless")
         self.xp = kwargs.get('xp', None)
@@ -201,7 +208,7 @@ class Creature:
         if average:
             return round((dice * self.level).average)
 
-        return sum((dice * self.level).roll())
+        return max(sum((dice * self.level).roll()), 1)
 
     def attack(self, target, attack):
         attack_roll, crit = attack.attack_roll()
@@ -310,6 +317,6 @@ class Character(Creature):
     def _calc_hp(self, average=False):
         dice = self.hd + self.constitution
         if average:
-            return round(dice.max + (dice * (self.level - 1)).average)
+            return max(round(dice.max + (dice * (self.level - 1)).average), 1)
 
-        return dice.max + sum((dice * (self.level-1)).roll())
+        return max(dice.max + sum((dice * (self.level-1)).roll()), 1)
