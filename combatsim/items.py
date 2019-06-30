@@ -17,14 +17,17 @@ class Item:
 
 class Armor(Item):
 
-    def __init__(self, name, base_ac, max_dex, **kwargs):
+    def __init__(self, name, base_ac, max_dex=None, **kwargs):
         super().__init__(name, **kwargs)
         self.base_ac = base_ac
         self.max_dex = max_dex
 
     @property
     def ac(self):
-        return self.base_ac + min(self.max_dex, self.owner.dexterity)
+        if self.max_dex is not None:
+            return self.base_ac + min(self.max_dex, self.owner.dexterity)
+        else:
+            return self.base_ac + self.owner.dexterity
 
     def equip(self, creature):
         # TODO (phillip): Check to see if the creature already has armor

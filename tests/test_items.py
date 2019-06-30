@@ -1,11 +1,19 @@
 import unittest
 from unittest.mock import patch
 
-from combatsim.items import Weapon
+from combatsim.items import Armor, Weapon
 from combatsim.creature import Monster
 from combatsim.dice import Dice
 
 dummy_monster = Monster()
+
+
+class TestArmor(unittest.TestCase):
+
+    def test_armor_with_no_max_dex(self):
+        monster = Monster(dexterity=20)
+        armor = Armor("Test", 12, owner=monster)
+        self.assertEqual(armor.ac, 17)
 
 
 class TestWeapon(unittest.TestCase):
