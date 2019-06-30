@@ -118,7 +118,7 @@ class Creature:
 
         # Must come after hd and abilities so _calc_hp works properly
         self.max_hp = kwargs.get('max_hp', self._calc_hp())
-        self.hp = self.max_hp
+        self.hp = kwargs.get('hp', self.max_hp)
 
         self.armor = None
         armor = kwargs.get('armor', None)
@@ -243,13 +243,7 @@ class Creature:
                 )
             self.spell_slots[level-1] -= 1
 
-        if spell.min_level > level:
-            raise RulesError(
-                f"{spell.__name__} must be cast at level {spell.min_level} but "
-                f"was cast at level {level}"
-            )
-
-        spell(self, level).cast(*args, **kwargs)
+        spell.cast(self, level, *args, **kwargs)
 
     def take_damage(self, value, type_=None):
         """ Take damage of a given type.

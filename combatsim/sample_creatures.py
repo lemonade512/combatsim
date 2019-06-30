@@ -2,7 +2,7 @@
 
 from combatsim.dice import Dice
 from combatsim.tactics import Healer
-from combatsim.spells import CureWounds
+from combatsim.spells import cure_wounds
 from combatsim.items import Weapon
 
 simple_cleric = {
@@ -12,7 +12,7 @@ simple_cleric = {
         Weapon("Staff", Dice("1d6"), "bludgeoning", attack_mod=4, damage_mod=2)
     ],
     'spell_slots': [3],
-    'spells': [CureWounds],
+    'spells': [cure_wounds],
     'tactics': Healer
 }
 

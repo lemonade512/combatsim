@@ -2,7 +2,6 @@ from collections import defaultdict
 
 from combatsim.dice import Dice
 from combatsim.tactics import Healer
-from combatsim.spells import CureWounds
 
 class Encounter:
 
