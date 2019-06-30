@@ -47,6 +47,13 @@ class Weapon(Item):
         melee (bool): True if this is a melee weapon.
         owner (Creature): The creature who has this weapon equipped.
         properties (list): A list of property tags.
+        attack_mod (int): The modifier to use for this weapon. This will
+            override any dexterity or strength bonuses. This makes it easier to
+            create weapons for monsters in the monster manual which don't use
+            the typical calculations.
+        damage_mod (int): Damage modifier that overrules any strength or
+            dexterity modifiers of the creature wielding the weapon. This makes
+            it easier to define weapons for monsters in the monster manual.
     """
 
     def __init__(
@@ -56,7 +63,9 @@ class Weapon(Item):
         damage_type,
         melee=True,
         owner=None,
-        properties=None
+        properties=None,
+        attack_mod=None,
+        damage_mod=None
     ):
         super().__init__(name, owner)
         self.damage = damage
@@ -65,6 +74,8 @@ class Weapon(Item):
         if not properties:
             properties = []
         self.properties = properties
+        self.attack_mod = attack_mod
+        self.damage_mod = damage_mod
 
     def equip(self, creature):
         super().equip(creature)
@@ -75,11 +86,16 @@ class Weapon(Item):
             advantage = False
             disadvantage = False
 
-        dice = Dice("1d20")
-        dice_mod = self._get_ability()
-        if self.owner.is_proficient(self):
-            dice_mod += self.owner.proficiency
+        # Determine modification
+        if self.attack_mod:
+            dice_mod = self.attack_mod
+        else:
+            dice_mod = self._get_ability()
+            if self.owner.is_proficient(self):
+                dice_mod += self.owner.proficiency
 
+        # Roll the d20
+        dice = Dice("1d20")
         if advantage:
             roll = max((dice * 2).roll())
         elif disadvantage:
@@ -89,12 +105,20 @@ class Weapon(Item):
 
         return roll + dice_mod, roll == 20
 
+    # TODO (phillip): Instead of rolling for damage, maybe this function should
+    # know how to apply damage to a creature. That way, the weapon is
+    # responsible for applying special damage types to a creature.
     def damage_roll(self, crit=False):
         dice = self.damage
         if crit:
             dice = dice * 2
 
-        return sum(dice.roll()) + self._get_ability(), self.damage_type
+        if self.damage_mod:
+            dice_mod = self.damage_mod
+        else:
+            dice_mod = self._get_ability()
+
+        return sum(dice.roll()) + dice_mod, self.damage_type
 
     def _get_ability(self):
         if 'finesse' in self.properties:

@@ -73,3 +73,19 @@ class TestWeapon(unittest.TestCase):
         roll, crit = attack.attack_roll()
         self.assertEqual(roll, 20)
         self.assertFalse(crit)
+
+    @patch("combatsim.dice.random.randint")
+    def test_attack_mod_overrides_strength(self, randint):
+        randint.return_value = 5
+        weapon = Weapon("test", None, None, attack_mod=5, owner=dummy_monster)
+        roll, crit = weapon.attack_roll()
+        self.assertEqual(roll, 10)
+
+    @patch("combatsim.dice.random.randint")
+    def test_damage_mod_overrides_strength(self, randint):
+        randint.return_value = 5
+        weapon = Weapon(
+            "test", Dice("1d1"), None, damage_mod=5, owner=dummy_monster
+        )
+        roll, _ = weapon.damage_roll()
+        self.assertEqual(roll, 10)
