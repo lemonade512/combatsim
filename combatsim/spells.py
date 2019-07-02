@@ -117,4 +117,5 @@ class Spell:
             print(f"\t{message}")
 
 
-cure_wounds = Spell("Cure Wounds", effects=[Heal('target'), Damage('self')])
+#cure_wounds = Spell("Cure Wounds", effects=[Heal('target'), Damage('self')])
+cure_wounds = Spell("Cure Wounds", effects=[Heal('target')])
