@@ -24,12 +24,17 @@ class Armor(Item):
 
     @property
     def ac(self):
+        """ Calculated armor class based on the owner.
+
+        If the armor has a max dexterity, that is taken into account.
+        """
         if self.max_dex is not None:
             return self.base_ac + min(self.max_dex, self.owner.dexterity)
         else:
             return self.base_ac + self.owner.dexterity
 
     def equip(self, creature):
+        """ Applies this armor to the creature's armor slot. """
         # TODO (phillip): Check to see if the creature already has armor
         # equipped. There may be something that needs to be done in that
         # case.
