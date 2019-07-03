@@ -258,10 +258,12 @@ class Creature:
         """
         if type_ in self.resistances:
             taken = math.floor(value / 2)
-            expression = f"{value} / 2 = {taken}"
+            # TODO (phillip): event log should show that damage was reduced
         else:
             taken = value
-            expression = f"{value}"
+
+        # Only used to return at the end
+        actual_taken = min(self.hp, taken)
 
         self.hp -= taken
         if self.hp < -self.max_hp:
@@ -269,7 +271,7 @@ class Creature:
             pass
 
         self.hp = max(0, self.hp)
-        return expression
+        return actual_taken
 
     def heal(self, value):
         add = min(self.max_hp - self.hp, value)

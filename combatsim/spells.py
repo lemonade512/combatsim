@@ -64,23 +64,51 @@ class Effect:
 # the logic for choosing targets. I should figure out how to extract out the
 # need to hardcode the dice used, the level multiplication, and the caster
 # spellcasting modifier.
-class Heal(Effect):
+class PipedEffect(Effect):
+    """ Effects that can be piped into each other.
+
+    For instance, if you want to inmplement a "drain" spell, you need to have
+    the amount of damage piped to the Heal effect.
+    """
+
+    def __init__(self, target_type, effect=None):
+        super().__init__(target_type)
+        self.pipe = effect
 
     def activate(self, caster, level, **kwargs):
-        healing = sum((Dice("1d8") * level).roll()) + caster.spellcasting
-        for target in self.get_targets(caster=caster, **kwargs):
-            health = target.heal(healing)
-
-        return f"healing {target} by {health}"
+        if self.pipe:
+            return self.pipe.activate(caster, level, **kwargs)
+        return None
 
 
-class Damage(Effect):
+class Heal(PipedEffect):
 
     def activate(self, caster, level, **kwargs):
-        damage = sum((Dice("1d8") * level).roll()) + caster.spellcasting
+        # Get piped healing or roll the healing
+        healing = super().activate(caster, level, **kwargs)
+        if not healing:
+            healing = sum((Dice("1d8") * level).roll()) + caster.spellcasting
+
         for target in self.get_targets(caster=caster, **kwargs):
-            target.take_damage(damage)
-            return f"damaging {target} by {damage}"
+            actual_healing = target.heal(healing)
+            print(f"\thealing {target} by {actual_healing}")
+
+        return actual_healing
+
+
+class Damage(PipedEffect):
+
+    def activate(self, caster, level, **kwargs):
+        # Get piped damage or roll the damage
+        damage = super().activate(caster, level, **kwargs)
+        if not damage:
+            damage = sum((Dice("1d8") * level).roll()) + caster.spellcasting
+
+        for target in self.get_targets(caster=caster, **kwargs):
+            actual_damage = target.take_damage(damage)
+            print(f"\tdamaging {target} by {actual_damage}")
+
+        return actual_damage
 
 
 class Spell:
@@ -114,8 +142,8 @@ class Spell:
             message = effect.activate(
                 caster, level, *args, **kwargs
             )
-            print(f"\t{message}")
 
 
 #cure_wounds = Spell("Cure Wounds", effects=[Heal('target'), Damage('self')])
+drain = Spell("Drain", effects=[Damage('self', Heal('target'))])
 cure_wounds = Spell("Cure Wounds", effects=[Heal('target')])
