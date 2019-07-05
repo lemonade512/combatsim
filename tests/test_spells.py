@@ -3,6 +3,7 @@ import unittest
 
 from combatsim.creature import Creature
 from combatsim.spells import Effect, Heal, Damage
+from combatsim.rules_error import RulesError
 
 
 class TestSpellEffects(unittest.TestCase):
@@ -14,6 +15,18 @@ class TestSpellEffects(unittest.TestCase):
     def test_effect_with_self_target(self):
         effect = Effect('self')
         self.assertEqual(effect.get_targets(caster=1, target=2)[0], 1)
+
+    def test_effect_with_multiple_targets(self):
+        effect = Effect('targets')
+        self.assertEqual(effect.get_targets(caster=1, targets=[2,3]), [2,3])
+
+    def test_effect_with_min_targets_raises_rules_error(self):
+        effect = Effect('targets', props={'min_targets': 2})
+        self.assertRaises(RulesError, effect.get_targets, caster=1, targets=[2])
+
+    def test_effect_with_max_targets_raises_rules_error(self):
+        effect = Effect('targets', props={'max_targets': 2})
+        self.assertRaises(RulesError, effect.get_targets, caster=1, targets=[2,3,4])
 
     @patch("combatsim.dice.random.randint")
     def test_heal_effect_at_level_1(self, randint):

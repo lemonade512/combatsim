@@ -1,6 +1,7 @@
 """ Implementation of all spells """
 
 from combatsim.dice import Dice
+from combatsim.rules_error import RulesError
 
 # Example Spell:
 #   level: 1
@@ -21,11 +22,41 @@ from combatsim.dice import Dice
 
 
 class Effect:
+    """ An effect that can be triggered by a spell or trap.
 
-    def __init__(self, target_type):
+    Attributes:
+        target_type (str): This is how this spell targets creatures. There are
+            currently 3 supported target types. `self` targets the caster.
+            `target` targets a single creature including self. `targets will
+            target all creatures passed to the activate method in the
+            'targets' key. If you use the `targets` type, you can include
+            'min_targets' and 'max_targets' in the `props` attribute.
+        props (dict): A dictionary of dynamic properties used by the effect.
+    """
+
+    def __init__(self, target_type, props=None):
         self.target_type = target_type
+        if not props:
+            props = {}
+        self.props = props
 
     def get_targets(self, **kwargs):
+        if self.target_type == "targets":
+            targets = kwargs.get('targets', [])
+            min_targets = self.props.get('min_targets', None)
+            max_targets = self.props.get('max_targets', None)
+
+            if min_targets and len(targets) < min_targets:
+                raise RulesError(
+                    f"{self} must target at least {min_targets} targets"
+                )
+            if max_targets and len(targets) > max_targets:
+                raise RulesError(
+                    f"{self} must target at most {max_targets} targets"
+                )
+
+            return targets
+
         if self.target_type == "target":
             if 'target' in kwargs:
                 return [kwargs['target']]

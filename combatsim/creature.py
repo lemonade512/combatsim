@@ -5,11 +5,7 @@ import math
 from combatsim.dice import Dice, Modifier
 from combatsim.tactics import TargetWeakest
 from combatsim.items import Armor, Weapon
-
-
-class RulesError(Exception):
-    """ Exception raised when a rule is broken. """
-    pass
+from combatsim.rules_error import RulesError
 
 
 class Ability(Modifier):
