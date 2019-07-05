@@ -71,9 +71,9 @@ class PipedEffect(Effect):
     the amount of damage piped to the Heal effect.
     """
 
-    def __init__(self, target_type, effect=None):
+    def __init__(self, target_type, pipe=None):
         super().__init__(target_type)
-        self.pipe = effect
+        self.pipe = pipe
 
     def activate(self, caster, level, **kwargs):
         if self.pipe:
@@ -98,6 +98,10 @@ class Heal(PipedEffect):
 
 class Damage(PipedEffect):
 
+    def __init__(self, target_type, pipe=None, type_=None):
+        super().__init__(target_type, pipe)
+        self.damage_type = type_
+
     def activate(self, caster, level, **kwargs):
         # Get piped damage or roll the damage
         damage = super().activate(caster, level, **kwargs)
@@ -105,7 +109,7 @@ class Damage(PipedEffect):
             damage = sum((Dice("1d8") * level).roll()) + caster.spellcasting
 
         for target in self.get_targets(caster=caster, **kwargs):
-            actual_damage = target.take_damage(damage)
+            actual_damage = target.take_damage(damage, self.damage_type)
             print(f"\tdamaging {target} by {actual_damage}")
 
         return actual_damage
@@ -144,6 +148,8 @@ class Spell:
             )
 
 
-#cure_wounds = Spell("Cure Wounds", effects=[Heal('target'), Damage('self')])
+# One or two targets within 5 feet of each other
+# Dex save or take 1d6 damage (changes as level up)
+acid_splash = Spell("Acid Splash", effects=[Damage('targets')])
 drain = Spell("Drain", effects=[Damage('self', Heal('target'))])
 cure_wounds = Spell("Cure Wounds", effects=[Heal('target')])

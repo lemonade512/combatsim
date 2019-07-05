@@ -2,7 +2,7 @@ from unittest.mock import Mock, patch
 import unittest
 
 from combatsim.creature import Creature
-from combatsim.spells import Effect, Heal
+from combatsim.spells import Effect, Heal, Damage
 
 
 class TestSpellEffects(unittest.TestCase):
@@ -30,6 +30,19 @@ class TestSpellEffects(unittest.TestCase):
         heal = Heal('self')
         heal.activate(creature, 3)
         self.assertEqual(creature.hp, 4)
+
+    @patch("combatsim.dice.random.randint")
+    def test_damage_effect_does_acid_damage(self, randint):
+        randint.return_value = 2
+        creature = Mock()
+        creature.spellcasting = 0
+        acid = Damage('self', None, 'acid')
+        acid.activate(creature, 1)
+        creature.take_damage.assert_called_with(2, 'acid')
+
+    def test_piped_effect(self):
+        # TODO
+        pass
 
     #@patch('combatsim.spells.Dice.roll')
     #def test_cure_wounds_heals_creature(self, roll):
