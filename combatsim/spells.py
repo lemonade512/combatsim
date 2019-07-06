@@ -66,6 +66,37 @@ class Effect:
         if self.target_type == "self":
             return [kwargs['caster']]
 
+    def activate(self, caster, level, **kwargs):
+        raise NotImplementedError
+
+
+class SavingThrow(Effect):
+
+    # TODO (phillip): Implement half on fail
+    def __init__(self, target_type, attribute, dc, effect, **kwargs):
+        super().__init__(target_type, **kwargs)
+        self.attribute = attribute
+        # TODO (phillip): Instead of passing the DC, perhaps we should use the
+        # caster's spell DC?
+        self.dc = dc
+        self.effect = effect
+
+    def activate(self, caster, level, **kwargs):
+        # TODO (phillip): Need to implement saving throw proficiency. This
+        # logic should probably be moved to the `creature` class because the
+        # creature itself will know when it has advantage/disadvantage or other
+        # modifiers to the saving throw.
+        for target in self.get_targets(caster=caster, **kwargs):
+            saving_throw = (Dice("1d20") + target.attributes[self.attribute]).roll()[0]
+            if saving_throw >= self.dc:
+                print(f"\t{target} saved against {self.attribute} with a {saving_throw}")
+                continue
+
+            # TODO (phillip): Not all effects should have an associated caster.
+            # I may want to rethink this API.
+            self.effect.activate(caster, level, target=target)
+
+
 # TODO (philip): Spells could have a "dry run" function that will return a
 # list of outcomes such as:
 #
@@ -134,6 +165,10 @@ class Damage(PipedEffect):
         self.damage_type = type_
 
     def activate(self, caster, level, **kwargs):
+        # TODO (phillip): Remove this and fix it for cantrips
+        if level == 0:
+            level = 5
+
         # Get piped damage or roll the damage
         damage = super().activate(caster, level, **kwargs)
         if not damage:
@@ -181,6 +216,17 @@ class Spell:
 
 # One or two targets within 5 feet of each other
 # Dex save or take 1d6 damage (changes as level up)
-acid_splash = Spell("Acid Splash", effects=[Damage('targets')])
+# TODO (phillip): Targets must be within 5 feet of each other for acid splash
+# TODO (phillip): Damage changes based on caster level for acid splash
+# TODO (phillip): Creature must make dex save (no damage on pass, full damage on fail)
+acid_splash = Spell(
+    "Acid Splash",
+    effects=[
+        SavingThrow('targets', 'dexterity', 12, Damage('target', type_='acid'), props={
+            'max_targets': 2
+        })
+    ],
+    cantrip=True
+)
 drain = Spell("Drain", effects=[Damage('self', Heal('target'))])
 cure_wounds = Spell("Cure Wounds", effects=[Heal('target')])

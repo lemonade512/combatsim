@@ -1,8 +1,8 @@
 """ My own custom monsters for testing encounters.  """
 
 from combatsim.dice import Dice
-from combatsim.tactics import Healer
-from combatsim.spells import cure_wounds, drain
+from combatsim.tactics import Healer, Mage
+from combatsim.spells import acid_splash, cure_wounds, drain
 from combatsim.items import Weapon
 
 simple_cleric = {
@@ -12,7 +12,7 @@ simple_cleric = {
         Weapon("Staff", Dice("1d6"), "bludgeoning", attack_mod=4, damage_mod=2)
     ],
     'spell_slots': [3],
-    'spells': [drain],
+    'spells': [cure_wounds],
     'tactics': Healer
 }
 
@@ -26,4 +26,14 @@ knight = {
     'weapons': [
         Weapon("Longsword", Dice("1d8"), "slashing")
     ]
+}
+
+mage = {
+    'name': "Mage",
+    'ac': 12,
+    'level': 2,
+    'intelligence': 12,
+    'spell_slots': [5],
+    'spells': [acid_splash],
+    'tactics': Mage
 }

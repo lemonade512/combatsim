@@ -49,11 +49,12 @@ class Encounter:
 
 if __name__ == "__main__":
     from combatsim.creature import Monster
-    from combatsim.sample_creatures import simple_cleric, commoner, knight
+    from combatsim.sample_creatures import simple_cleric, commoner, knight, mage
     e = Encounter([
         Monster.from_base(simple_cleric, level=5, team=1),
         Monster.from_base(commoner, level=4, team=1),
         Monster.from_base(commoner, level=4, team=1),
-        Monster.from_base(knight, level=12, team=2, strength=18)
+        Monster.from_base(knight, level=12, team=2, strength=18),
+        Monster.from_base(mage, level=2, team=2)
     ])
     e.run()

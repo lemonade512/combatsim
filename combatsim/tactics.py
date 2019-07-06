@@ -37,6 +37,19 @@ class TargetWeakest(BaseTactics):
         self.actor.attack(target, self.actor.weapons[0])
 
 
+class Mage(TargetWeakest):
+
+    def act(self, creatures):
+        if not self.actor.is_alive():
+            return
+
+        if self.actor.spell_slots[0] == 0:
+            return super().act(creatures)
+
+        possible_targets = [e for e in self.enemies(creatures) if e.hp > 0]
+        return self.actor.cast(self.actor.spells[0], 0, targets=possible_targets[:2])
+
+
 class Healer(TargetWeakest):
 
     def act(self, creatures):
