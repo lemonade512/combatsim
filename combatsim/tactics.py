@@ -21,9 +21,6 @@ class BaseTactics:
 class TargetWeakest(BaseTactics):
 
     def act(self, creatures):
-        if not self.actor.is_alive():
-            return
-
         target = None
         for creature in self.enemies(creatures):
             if not creature.is_alive():
@@ -40,9 +37,6 @@ class TargetWeakest(BaseTactics):
 class Mage(TargetWeakest):
 
     def act(self, creatures):
-        if not self.actor.is_alive():
-            return
-
         if self.actor.spell_slots[0] == 0:
             return super().act(creatures)
 
@@ -53,9 +47,6 @@ class Mage(TargetWeakest):
 class Healer(TargetWeakest):
 
     def act(self, creatures):
-        if not self.actor.is_alive():
-            return
-
         if self.actor.spell_slots[0] == 0:
             return super().act(creatures)
 

@@ -16,11 +16,12 @@ class Encounter:
         print("\n==== BEGIN ENCOUNTER ====")
         initiative = self.roll_initiative()
         i = 0
-        while True:
+        while not self.encounter_over():
             current_creature = initiative[i][1]
-            current_creature.tactics.act([c for c in self.creatures if c != current_creature])
-            if self.encounter_over():
-                break
+            if current_creature.hp > 0:
+                current_creature.tactics.act(
+                    [c for c in self.creatures if c != current_creature]
+                )
             i = (i + 1) % len(initiative)
 
         print("\n==== END ENCOUNTER ====")
