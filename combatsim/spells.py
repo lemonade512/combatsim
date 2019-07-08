@@ -73,12 +73,9 @@ class Effect:
 class SavingThrow(Effect):
 
     # TODO (phillip): Implement half on fail
-    def __init__(self, target_type, attribute, dc, effect, **kwargs):
+    def __init__(self, target_type, attribute, effect, **kwargs):
         super().__init__(target_type, **kwargs)
         self.attribute = attribute
-        # TODO (phillip): Instead of passing the DC, perhaps we should use the
-        # caster's spell DC?
-        self.dc = dc
         self.effect = effect
 
     def activate(self, caster, level, **kwargs):
@@ -88,7 +85,7 @@ class SavingThrow(Effect):
         # modifiers to the saving throw.
         for target in self.get_targets(caster=caster, **kwargs):
             saving_throw = (Dice("1d20") + target.attributes[self.attribute]).roll()[0]
-            if saving_throw >= self.dc:
+            if saving_throw >= caster.spell_dc:
                 print(f"\t{target} saved against {self.attribute} with a {saving_throw}")
                 continue
 
@@ -222,7 +219,7 @@ class Spell:
 acid_splash = Spell(
     "Acid Splash",
     effects=[
-        SavingThrow('targets', 'dexterity', 12, Damage('target', type_='acid'), props={
+        SavingThrow('targets', 'dexterity', Damage('target', type_='acid'), props={
             'max_targets': 2
         })
     ],

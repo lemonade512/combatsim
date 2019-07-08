@@ -171,6 +171,11 @@ class Creature:
             return self.armor.ac
         return 10 + self.dexterity
 
+    @property
+    def spell_dc(self):
+        """ DC for spells cast by this creature.  """
+        return 8 + self.spellcasting + self.proficiency
+
     def is_proficient(self, weapon):
         raise NotImplementedError
 

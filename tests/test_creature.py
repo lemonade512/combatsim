@@ -89,6 +89,10 @@ class TestCreature(unittest.TestCase):
         creature = Creature(level=1, hd=Dice("1d1"), constitution=2)
         self.assertEqual(creature.max_hp, 1)
 
+    def test_creature_spell_dc(self):
+        creature = Creature(level=1, spellcasting="wisdom", wisdom=12)
+        self.assertEqual(creature.spell_dc, 11)
+
 
 class TestCharacter(unittest.TestCase):
 
