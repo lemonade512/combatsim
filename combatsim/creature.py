@@ -176,6 +176,19 @@ class Creature:
         """ DC for spells cast by this creature.  """
         return 8 + self.spellcasting + self.proficiency
 
+    def saving_throw(self, attribute, dc):
+        """ Rolls a saving throw for an attribute.
+
+        Returns:
+            bool: True if saved, False otherwise.
+        """
+        saving_throw = (Dice("1d20") + self.attributes[attribute]).roll()[0]
+        if saving_throw >= dc:
+            print(f"\t{self} saved against {attribute} with a {saving_throw}")
+            return True
+        else:
+            return False
+
     def is_proficient(self, weapon):
         raise NotImplementedError
 

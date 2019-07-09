@@ -84,14 +84,11 @@ class SavingThrow(Effect):
         # creature itself will know when it has advantage/disadvantage or other
         # modifiers to the saving throw.
         for target in self.get_targets(caster=caster, **kwargs):
-            saving_throw = (Dice("1d20") + target.attributes[self.attribute]).roll()[0]
-            if saving_throw >= caster.spell_dc:
-                print(f"\t{target} saved against {self.attribute} with a {saving_throw}")
-                continue
-
             # TODO (phillip): Not all effects should have an associated caster.
             # I may want to rethink this API.
-            self.effect.activate(caster, level, target=target)
+            saved = target.saving_throw(self.attribute, caster.spell_dc)
+            if not saved:
+                self.effect.activate(caster, level, target=target)
 
 
 # TODO (philip): Spells could have a "dry run" function that will return a
