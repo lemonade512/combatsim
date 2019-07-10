@@ -41,7 +41,6 @@ class Ability(Modifier):
         return 1 + (2 * (modifier + 5))
 
 
-# TODO (phillip): Figure out a good way to specify base creature
 class Creature:
     """ Definition of a creature and its stats.
 
