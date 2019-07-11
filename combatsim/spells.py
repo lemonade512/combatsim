@@ -113,9 +113,6 @@ class SavingThrow(Effect):
 #
 # Another use for activation conditions might be saving throws.
 
-# OR TODO TODO TODO: A GOOD IDEA might be to have composable effects where I
-# can do SavingThrow(Heal('target'), dc=15, 'dexterity') or something like that
-
 # TODO (phillip): I have used "target_type" on the Effect class to extract out
 # the logic for choosing targets. I should figure out how to extract out the
 # need to hardcode the dice used, the level multiplication, and the caster
