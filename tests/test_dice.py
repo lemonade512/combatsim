@@ -44,6 +44,10 @@ class TestDice(unittest.TestCase):
         dice = Dice("1d20") + 1
         self.assertEqual(dice, Dice("1d20") + Modifier(1))
 
+    def test_sub_int(self):
+        dice = Dice("1d20") - 1
+        self.assertEqual(dice, Dice("1d20") + Modifier(-1))
+
     def test_average_d6(self):
         dice = Dice("d6")
         self.assertEqual(dice.average, 3.5)

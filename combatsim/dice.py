@@ -113,6 +113,15 @@ class Dice:
 
         return NotImplemented
 
+    def __sub__(self, other):
+        if isinstance(other, int):
+            return Dice(self.dice, self.modifiers + [Modifier(-1)])
+
+        if isinstance(other, Modifier):
+            return Dice(self.dice, self.modifiers + [other])
+
+        return NotImplemented
+
     def __mul__(self, other):
         if isinstance(other, int):
             return Dice(self.dice * other, self.modifiers)
