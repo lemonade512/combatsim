@@ -156,9 +156,7 @@ class Damage(PipedEffect):
         self.damage_type = type_
 
     def activate(self, caster, level, **kwargs):
-        # TODO (phillip): Remove this and fix it for cantrips
-        if level == 0:
-            level = 5
+        # TODO (phillip): Implement scaling of dice for cantrips.
 
         # Get piped damage or roll the damage
         damage = super().activate(caster, level, **kwargs)
