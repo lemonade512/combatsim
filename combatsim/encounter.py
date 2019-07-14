@@ -15,14 +15,15 @@ class Encounter:
 
         print("\n==== BEGIN ENCOUNTER ====")
         initiative = self.roll_initiative()
-        i = 0
+        combat_round = 0
         while not self.encounter_over():
-            current_creature = initiative[i][1]
-            if current_creature.hp > 0:
-                current_creature.tactics.act(
-                    [c for c in self.creatures if c != current_creature]
-                )
-            i = (i + 1) % len(initiative)
+            combat_round += 1
+            print(f"\n--Combat Round {combat_round}--")
+            for init, creature in initiative:
+                if creature.hp > 0:
+                    creature.tactics.act(
+                        [c for c in self.creatures if c != creature]
+                    )
 
         print("\n==== END ENCOUNTER ====")
         for creature in self.creatures:
