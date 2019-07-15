@@ -30,6 +30,7 @@ class Encounter:
             print(f"\t{creature}: {creature.hp}")
 
     def encounter_over(self):
+        """ Returns true if all creatures on all but one team are dead. """
         teams = defaultdict(int)
         for creature in self.creatures:
             if not creature.is_alive():
