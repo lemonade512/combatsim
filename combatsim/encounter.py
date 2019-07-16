@@ -2,23 +2,26 @@ from collections import defaultdict
 
 from combatsim.dice import Dice
 from combatsim.tactics import Healer
+from combatsim.event import EventLog
 
 class Encounter:
 
     def __init__(self, creatures):
         self.creatures = creatures
+        self.combat_round = 0
 
     def run(self):
         print("==== Combatants ====")
+        event_log = EventLog()
+        event_log.encounter = self
         for creature in self.creatures:
             print(f"{creature}: {creature.hp}")
 
         print("\n==== BEGIN ENCOUNTER ====")
         initiative = self.roll_initiative()
-        combat_round = 0
         while not self.encounter_over():
-            combat_round += 1
-            print(f"\n--Combat Round {combat_round}--")
+            self.combat_round += 1
+            print(f"\n--Combat Round {self.combat_round}--")
             for init, creature in initiative:
                 if creature.hp > 0:
                     creature.tactics.act(
