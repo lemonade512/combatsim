@@ -14,6 +14,7 @@ class EventLog:
         self.events = []
 
     def log(self, message):
+        """ Logs a message in the event log """
         if not self.encounter:
             raise ValueError("EventLog encounter has not yet been initialized")
 
