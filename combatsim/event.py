@@ -1,6 +1,12 @@
 """ Code to handle keeping a log of events during an encounter. """
 
 class EventLog:
+    """ The event log is a singleton that tracks events in encounters.
+
+    Anytime a new encounter is started, it will start adding entries to the
+    event log. Then, the event log can be used to perform basic statistical
+    analysis or display what happened to the user.
+    """
     __singleton = None
 
     def __new__(cls, *args, **kwargs):
