@@ -6,6 +6,9 @@ from combatsim.dice import Dice, Modifier
 from combatsim.tactics import TargetWeakest
 from combatsim.items import Armor, Weapon
 from combatsim.rules_error import RulesError
+from combatsim.event import EventLog
+
+LOGGER = EventLog()
 
 
 class Ability(Modifier):
@@ -183,7 +186,7 @@ class Creature:
         """
         saving_throw = (Dice("1d20") + self.attributes[attribute]).roll()[0]
         if saving_throw >= dc:
-            print(f"\t{self} saved against {attribute} with a {saving_throw}")
+            LOGGER.log(f"\t{self} saved against {attribute} with a {saving_throw}")
             return True
         else:
             return False
@@ -228,9 +231,9 @@ class Creature:
         if attack_roll >= target.ac:
             damage, damage_type = attack.damage_roll(crit=crit)
             damage_taken = target.take_damage(damage, damage_type)
-            print(f"{self} hits {target} with {attack.name} doing {damage_taken} damage")
+            LOGGER.log(f"{self} hits {target} with {attack.name} doing {damage_taken} damage")
         else:
-            print(f"{self} misses {target} with {attack.name}")
+            LOGGER.log(f"{self} misses {target} with {attack.name}")
 
     def cast(self, spell, level, *args, **kwargs):
         """ Casts a spell.

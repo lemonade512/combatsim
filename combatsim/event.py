@@ -19,6 +19,12 @@ class EventLog:
         self.encounter = encounter
         self.events = []
 
+    def __str__(self):
+        output = ""
+        for event in self.events:
+            output += str(event) + "\n"
+        return output
+
     def log(self, message):
         """ Logs a message in the event log """
         if not self.encounter:
@@ -34,3 +40,6 @@ class Event:
     def __init__(self, round_, message):
         self.round = round_
         self.message = message
+
+    def __str__(self):
+        return f"{self.round}:: {self.message}"

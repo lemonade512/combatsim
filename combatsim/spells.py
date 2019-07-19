@@ -2,6 +2,9 @@
 
 from combatsim.dice import Dice
 from combatsim.rules_error import RulesError
+from combatsim.event import EventLog
+
+LOGGER = EventLog()
 
 # Example Spell:
 #   level: 1
@@ -144,7 +147,7 @@ class Heal(PipedEffect):
 
         for target in self.get_targets(caster=caster, **kwargs):
             actual_healing = target.heal(healing)
-            print(f"\thealing {target} by {actual_healing}")
+            LOGGER.log(f"\thealing {target} by {actual_healing}")
 
         return actual_healing
 
@@ -165,7 +168,7 @@ class Damage(PipedEffect):
 
         for target in self.get_targets(caster=caster, **kwargs):
             actual_damage = target.take_damage(damage, self.damage_type)
-            print(f"\tdamaging {target} by {actual_damage}")
+            LOGGER.log(f"\tdamaging {target} by {actual_damage}")
 
         return actual_damage
 
@@ -196,7 +199,7 @@ class Spell:
                 f"was cast at level {level}"
             )
 
-        print(f"{caster} casts {self.name}")
+        LOGGER.log(f"{caster} casts {self.name}")
         for effect in self.effects:
             message = effect.activate(
                 caster, level, *args, **kwargs

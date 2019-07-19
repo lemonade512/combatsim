@@ -21,12 +21,12 @@ class Encounter:
         initiative = self.roll_initiative()
         while not self.encounter_over():
             self.combat_round += 1
-            print(f"\n--Combat Round {self.combat_round}--")
             for init, creature in initiative:
                 if creature.hp > 0:
                     creature.tactics.act(
                         [c for c in self.creatures if c != creature]
                     )
+        print(event_log)
 
         print("\n==== END ENCOUNTER ====")
         for creature in self.creatures:
