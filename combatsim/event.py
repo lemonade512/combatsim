@@ -20,6 +20,7 @@ class EventLog:
         self.events = []
 
     def __str__(self):
+        """ Representation of events in the event log. """
         output = ""
         for event in self.events:
             output += str(event) + "\n"
