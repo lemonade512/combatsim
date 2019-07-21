@@ -115,11 +115,6 @@ class SavingThrow(Effect):
 # could be defined by "activation" conditions.
 #
 # Another use for activation conditions might be saving throws.
-
-# TODO (phillip): I have used "target_type" on the Effect class to extract out
-# the logic for choosing targets. I should figure out how to extract out the
-# need to hardcode the dice used, the level multiplication, and the caster
-# spellcasting modifier.
 class PipedEffect(Effect):
     """ Effects that can be piped into each other.
 
