@@ -1,3 +1,10 @@
+""" AI implementations for basic characters and monsters.
+
+All logic for deciding what spells to cast, what actions to take, and how to
+move should be put in one of the `tactics` classes.
+"""
+
+
 class BaseTactics:
 
     def __init__(self, actor):
