@@ -1,12 +1,18 @@
 import unittest
+from unittest.mock import Mock
 
 from combatsim.items import Armor
 from combatsim.creature import Ability, Creature, Monster, RulesError, Character
 from combatsim.spells import Spell
 from combatsim.dice import Dice, Modifier
+from combatsim.event import EventLog
 
 
 class TestCreature(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        logger = EventLog(Mock())
 
     def test_ability_modifiers_computed_from_abilties(self):
         creature = Creature(
