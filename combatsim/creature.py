@@ -146,6 +146,12 @@ class Creature:
         self.spells = kwargs.get('spells', [])
         self.spell_slots = kwargs.get('spell_slots', [])
 
+        # Set up grid if it is necessary
+        self.grid = kwargs.get('grid', None)
+        self.x, self.y = kwargs.get('pos', (None,None))
+        if self.x and self.y:
+            self.grid[self.x, self.y] = self
+
     def __str__(self):
         return f"{self.name}"
 

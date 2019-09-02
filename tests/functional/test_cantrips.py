@@ -4,7 +4,7 @@ import unittest
 
 import combatsim.cantrips as cantrips
 from combatsim.grid import Grid
-from combatsim.creature import Creature
+from combatsim.creature import Monster
 
 from combatsim.tests.mock_dice import MockDice
 
@@ -15,9 +15,9 @@ class TestAcidSplash(unittest.TestCase):
     def test_acid_splash_against_single_enemy(self):
         # Let's say we have a wizard fighting against a kobold. The wizard only
         # knows acid splash, and the two combatants are 60 feet from each other.
-        grid = Grid(60,60)
-        wizard = Creature(level=1, max_hp=6)
-        kobold = Creature(level=1)
+        grid = Grid(1,60)
+        wizard = Monster(level=1, pos=(0,0), grid=grid)
+        kobold = Monster(level=1, max_hp=6, pos=(0,59), grid=grid)
 
         # The wizard casts acid splash at the kobold, and the kobold passes its
         # dexterity saving throw, thus receiving no damage.
