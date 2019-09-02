@@ -1,6 +1,5 @@
 from collections import defaultdict
 
-from combatsim.dice import Dice
 from combatsim.tactics import Healer
 from combatsim.event import EventLog
 

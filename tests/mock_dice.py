@@ -1,91 +1,91 @@
-""" Implementation of a test class for dice.
+""" Implementation of a test class for dice. """
 
-Example:
-
-    class TestCase(unittest.TestCase):
-        @test_dice.wrap
-        def
-"""
-
+from collections import defaultdict
 from functools import wraps
-from unittest.mock import patch
+import inspect
+import unittest.mock
+
+from combatsim.dice import Dice
 
 
 class MockRoll:
+    """ Helper class to make scripting syntax look cool in functional tests.
 
-    def __init__(self, val):
-        self.val = val
-
-    def __call__(self, *args, **kwargs):
-        return [self.val]
+    I thought it was neat to make it so that I could specify values for
+    functional tests using things like `MockDice.value > target.ac`, so I made
+    this class. It doesn't really do anything useful beyond making the tests
+    a bit more readable.
+    """
 
     def __lt__(self, other):
-        return other - 1
+        return [other - 1]
 
     def __gt__(self, other):
-        return other + 1
+        return [other + 1]
+
+    def __eq__(self, other):
+        return [other]
 
 
 class MockDice:
     patches = []
-    roll_val = None
+    roll_vals = defaultdict(dict)
+    value = MockRoll()
 
     def __init__(self, dice, modifiers=None):
-        self.roll = MockRoll(MockDice.roll_val)
+        self.dice = dice
+
+    def roll(self):
+        """ Checks stack for a function with roll value attached.
+
+        This method will traverse up the current frame stack for a code object
+        that has had a roll value attached to it with the set_roll method. If
+        a value has been attached, that value will be returned. Otherwise, we
+        return a randomized value using the default Dice class.
+        """
+        for f in inspect.stack():
+            filename = f.frame.f_code.co_filename
+            lineno = f.frame.f_code.co_firstlineno
+            if lineno in MockDice.roll_vals[filename]:
+                return MockDice.roll_vals[filename][lineno]
+
+        return Dice(self.dice).roll()
 
     def __add__(self, other):
         return self
 
-    @classmethod
-    def schedule_cleanup(cls, test_func):
-        """ Decorator for wrapping test functions.
-
-        This decorator will make sure to do patch cleanup once the test
-        function has returned.
-        """
-        @wraps(test_func)
-        def wrapper(*args, **kwargs):
-            try:
-                output = test_func(*args, **kwargs)
-            finally:
-                cls.cleanup()
-            return output
-        return wrapper
+    def __mul__(self, other):
+        return self
 
     @classmethod
-    def patch(cls, *args):
+    def patch(cls, *patches):
         """ Patches Dice instances on all modules passed in.
 
         Args:
-            *args: A list of strings that will be passed to the mock patch
+            *patches: A list of strings that will be passed to the mock patch
                 method. For example, you could pass in 'my_module.Dice' to
                 patch the Dice class on that module.
         """
-        for path in args:
-            patcher = patch(path + '.Dice', MockDice)
-            cls.patches.append(patcher)
-            patcher.start()
-
-    @classmethod
-    def cleanup(cls):
-        """ Removes all patches that were previously applied. """
-        for patch in cls.patches:
-            patch.stop()
-        cls.patches = []
-
-    @classmethod
-    def set_roll(cls, obj, attr, val):
-        def wrapper(func):
-            @wraps(func)
-            def wrapped(*args, **kwargs):
-                print(func, args)
-                temp = MockDice.roll_val
-                MockDice.roll_val = val
-                output = func(obj, *args, **kwargs)
-                MockDice.roll_val = temp
+        def schedule_cleanup(test_func):
+            @wraps(test_func)
+            def wrapper(*args, **kwargs):
+                for path in patches:
+                    patcher = unittest.mock.patch(path + '.Dice', MockDice)
+                    cls.patches.append(patcher)
+                    patcher.start()
+                try:
+                    output = test_func(*args, **kwargs)
+                finally:
+                    for patch in cls.patches:
+                        patch.stop()
+                    cls.patches = []
+                    cls.roll_vals = defaultdict(dict)
                 return output
-            return wrapped
+            return wrapper
+        return schedule_cleanup
 
-        patcher = patch.object(obj, attr, wrapper(obj.__class__.__dict__[attr]))
-        patcher.start()
-        MockDice.patches.append(patcher)
+    @classmethod
+    def set_roll(cls, obj, dice, val):
+        filename = inspect.getfile(obj)
+        lineno = inspect.getsourcelines(obj)[1]
+        cls.roll_vals[filename][lineno] = val
