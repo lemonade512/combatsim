@@ -6,6 +6,9 @@ Therefore, I will be focussing on things that do damage, or exert some
 positive or negative effects on nearby creatures.
 """
 
+from combatsim.dice import Dice
+from combatsim.spells import CantripDamage, SavingThrow, Sphere, Spell
+
 # Acid Splash: You hurl a bubble of acid.
 #
 # Choose one or two creatures you can see within range. If you choose two, they
@@ -16,6 +19,8 @@ positive or negative effects on nearby creatures.
 # (3d6), and 17th level (4d6).
 acid_splash = Spell(
   casting_time="action",
+  # TODO technically, this isn't a sphere because both creatures have to be
+  # within 60 feet of the caster.
   targets=Sphere(radius=5, max_=2, filter_="enemies"),
   range_=60,
   components={"V", "S"},

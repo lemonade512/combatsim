@@ -28,6 +28,30 @@ class MockRoll:
 
 
 class MockDice:
+    """ Sets up mock values for dice rolls during tests.
+
+    This function is meant to make unit and functional tests easier to write.
+    First you must patch the 'Dice' value of any module in which you want to
+    roll mock dice. Then, you can attach values to specific methods, classes,
+    or functions, and those values will be returned any time there are dice
+    rolls in those methods classes or functions. Here is an example::
+
+        @MockDice.patch('combatsim.creature')
+        def test_my_class(self):
+            kobold = combatsim.creature.Creature()
+            MockDice.set(combatsim.creature.Creature, '1d8', [5])
+            MockDice.set(kobold.attack, '1d20', [10])
+
+    Whenever dice are rolled in a mocked module, the stack will be inspected
+    for three possible cases of mock roles:
+
+        1) Bound method on an objct
+        2) Class function
+        3) Code file and line number
+
+    If none of those cases match, then the basic Dice class is used for a
+    randomized roll.
+    """
     patches = []
     roll_vals = defaultdict(dict)
     value = MockRoll()
@@ -44,11 +68,35 @@ class MockDice:
         return a randomized value using the default Dice class.
         """
         for f in inspect.stack():
+            if 'self' in f.frame.f_locals:
+                obj_id = id(f.frame.f_locals['self'])
+                # Case: Method
+                if (
+                    obj_id in MockDice.roll_vals
+                    and f.function in MockDice.roll_vals[obj_id]
+                    and self.dice in MockDice.roll_vals[obj_id][f.function]
+                ):
+                    return MockDice.roll_vals[obj_id][f.function][self.dice]
+
+                # Case: Class
+                klass = f.frame.f_locals['self'].__class__.__name__
+                if (
+                    klass in MockDice.roll_vals
+                    and self.dice in MockDice.roll_vals[klass]
+                ):
+                    return MockDice.roll_vals[klass][self.dice]
+
+            # Case: Default
             filename = f.frame.f_code.co_filename
             lineno = f.frame.f_code.co_firstlineno
-            if lineno in MockDice.roll_vals[filename]:
-                return MockDice.roll_vals[filename][lineno]
+            if (
+                filename in MockDice.roll_vals
+                and lineno in MockDice.roll_vals[filename]
+                and self.dice in MockDice.roll_vals[filename][lineno]
+            ):
+                return MockDice.roll_vals[filename][lineno][self.dice]
 
+        # Case: Not found
         return Dice(self.dice).roll()
 
     def __add__(self, other):
@@ -86,6 +134,29 @@ class MockDice:
 
     @classmethod
     def set_roll(cls, obj, dice, val):
-        filename = inspect.getfile(obj)
-        lineno = inspect.getsourcelines(obj)[1]
-        cls.roll_vals[filename][lineno] = val
+        """ Set roll for the given object.
+
+        This function assumes that you have mocked out the proper modules where
+        you want to roll the mock dice.
+
+        Args:
+            obj: This can be a function, class, or bound method. When that
+                method or class is found in the stack, it will use the given
+                value for the given dice role.
+            dice: This should be the same as the `dice` argument to the Dice
+                class.
+            val: The value that should be returned when these mock dice are
+                rolled.
+        """
+        if inspect.ismethod(obj):
+            if obj.__name__ not in cls.roll_vals[id(obj.__self__)]:
+                cls.roll_vals[id(obj.__self__)][obj.__name__] = dict()
+            cls.roll_vals[id(obj.__self__)][obj.__name__][dice] = val
+        elif inspect.isclass(obj):
+            cls.roll_vals[obj.__name__][dice] = val
+        else:
+            filename = inspect.getfile(obj)
+            lineno = inspect.getsourcelines(obj)[1]
+            if lineno not in cls.roll_vals[filename]:
+                cls.roll_vals[filename][lineno] = dict()
+            cls.roll_vals[filename][lineno][dice] = val

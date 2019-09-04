@@ -74,12 +74,42 @@ class TestMockDice(unittest.TestCase):
         MockDice.set_roll(kobold.saving_throw, '1d20', MockDice.value > 100)
         self.assertTrue(kobold.saving_throw('wisdom', 100))
 
+    @MockDice.patch('combatsim.creature')
+    def test_mock_dice_multiple_creatures(self):
+        kobold1 = combatsim.creature.Creature()
+        kobold2 = combatsim.creature.Creature()
+        MockDice.set_roll(kobold1.saving_throw, '1d20', MockDice.value > 100)
+        MockDice.set_roll(kobold2.saving_throw, '1d20', MockDice.value < 0)
+        self.assertTrue(kobold1.saving_throw('wisdom', 100))
+        self.assertFalse(kobold2.saving_throw('wisdom', 0))
+
+    @MockDice.patch('combatsim.creature')
+    def test_mock_dice_on_class(self):
+        kobold = combatsim.creature.Creature()
+        MockDice.set_roll(combatsim.creature.Creature, '1d20', MockDice.value > 100)
+        self.assertTrue(kobold.saving_throw('wisdom', 100))
+
+    @MockDice.patch('combatsim.creature')
+    def test_mock_dice_on_class_function(self):
+        kobold = combatsim.creature.Creature()
+        MockDice.set_roll(combatsim.creature.Creature.saving_throw, '1d20', MockDice.value > 100)
+        self.assertTrue(kobold.saving_throw('wisdom', 100))
+
+    @MockDice.patch('combatsim.creature')
+    def test_mock_dice_object_overrides_class(self):
+        kobold1 = combatsim.creature.Creature()
+        kobold2 = combatsim.creature.Creature()
+        MockDice.set_roll(combatsim.creature.Creature.saving_throw, '1d20', MockDice.value > 100)
+        MockDice.set_roll(kobold2.saving_throw, '1d20', MockDice.value < 0)
+        self.assertTrue(kobold1.saving_throw('wisdom', 100))
+        self.assertFalse(kobold2.saving_throw('wisdom', 0))
+
     @MockDice.patch('combatsim.creature', 'combatsim.items')
     def test_mock_dice_multiple_types(self):
         kobold = combatsim.creature.Monster()
         weapon = Weapon("Longsword", MockDice("1d8"), "slashing", owner=kobold)
         target = Mock()
-        target.ac = 1
+        target.ac = 15
         MockDice.set_roll(kobold.attack, '1d20', MockDice.value > target.ac)
         MockDice.set_roll(kobold.attack, '1d8', MockDice.value == 10)
         kobold.attack(target, weapon)
