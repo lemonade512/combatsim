@@ -76,5 +76,30 @@ class TestAcidSplash(unittest.TestCase):
 
     @MockDice.patch('combatsim.creature', 'combatsim.cantrips')
     def test_acid_splash_against_three_enemies(self):
-        # TODO test that three enemies can't be targeted
-        # TODO test targeting a location instead of a list of creatures
+        # Let's say we have a wizard fighting against two kobolds. The wizard
+        # only knows acid splash, and the two kobolds are 60 feet from the
+        # wizard and next to each other.
+        grid = Grid(1,60)
+        wizard = Monster(level=1, pos=(0,0), grid=grid)
+        kobold1 = Monster(level=1, max_hp=6, pos=(0,59), grid=grid)
+        kobold2 = Monster(level=1, max_hp=6, pos=(0,58), grid=grid)
+        kobold3 = Monster(level=1, max_hp=6, pos=(0,57), grid=grid)
+
+        # A rules error is thrown if the wizard tries to target more than two
+        # creatures.
+        self.assertRaises(
+            RulesError,
+            wizard.cast,
+            cantrips.acid_splash,
+            0,
+            targets=[kobold1, kobold2, kobold3]
+        )
+
+        # The wizard casts acid splash at a location within range of all three
+        # kobolds. The kobold at the location of the attack is chosen as one of
+        # the targets. The second target is either of the other two targets.
+        MockDice.set_roll(Monster.saving_throw, '1d20', MockDice.value > wizard.spell_dc)
+        MockDice.set_roll(cantrips.CantripDamage.activate, '1d8', MockDice.value == 1)
+        wizard.cast(cantrips.acid_splash, 0, targets=(0,58))
+        self.assertEqual(kobold2.hp, 6-(1 + wizard.spellcasting))
+        self.assertEqual(kobold1.hp + kobold3.hp, 12-(1+wizard.spellcasting))

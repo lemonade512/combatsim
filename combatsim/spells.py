@@ -154,12 +154,33 @@ class Damage(PipedEffect):
         self.damage_type = type_
 
     def activate(self, caster, level, **kwargs):
-        # TODO (phillip): Implement scaling of dice for cantrips.
-
         # Get piped damage or roll the damage
         damage = super().activate(caster, level, **kwargs)
         if not damage:
             damage = sum((Dice("1d8") * level).roll()) + caster.spellcasting
+
+        for target in self.get_targets(caster=caster, **kwargs):
+            actual_damage = target.take_damage(damage, self.damage_type)
+            LOGGER.log(f"\tdamaging {target} by {actual_damage}")
+
+        return actual_damage
+
+
+class CantripDamage(PipedEffect):
+    levels = [1, 5,11,17]
+
+    def __init__(self, target_type, dice, pipe=None, type_=None):
+        super().__init__(target_type, pipe)
+        self.damage_type = type_
+        self.damage_dice = dice
+
+    # TODO (phillip): This method is a lot like Damage.activate
+    def activate(self, caster, level, **kwargs):
+        # Get piped damage or roll the damage
+        damage = super().activate(caster, level, **kwargs)
+        if not damage:
+            scale = sum([1 for x in CantripDamage.levels if x <= caster.level])
+            damage = sum((self.damage_dice * scale).roll())
 
         for target in self.get_targets(caster=caster, **kwargs):
             actual_damage = target.take_damage(damage, self.damage_type)

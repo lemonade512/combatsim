@@ -2,10 +2,13 @@ from unittest.mock import Mock, patch
 import unittest
 
 from combatsim.creature import Creature
-from combatsim.spells import Effect, Heal, Damage
+from combatsim.dice import Dice
+from combatsim.spells import Effect, Heal, Damage, CantripDamage
 from combatsim.rules_error import RulesError
 
 
+# TODO (phillip): Separate these test cases out. There can be a test case for
+# the base spell effects class, then a separate test case for each spell effect.
 class TestSpellEffects(unittest.TestCase):
 
     def test_effect_with_single_target(self):
@@ -52,6 +55,24 @@ class TestSpellEffects(unittest.TestCase):
         acid = Damage('self', None, 'acid')
         acid.activate(creature, 1)
         creature.take_damage.assert_called_with(2, 'acid')
+
+    def test_cantrip_damage_effect_scales_by_level(self):
+        creature = Mock()
+        creature.spellcasting = 0
+        acid = CantripDamage('self', Dice('1d1'), None, 'acid')
+
+        creature.level = 1
+        acid.activate(creature, 0)
+        creature.take_damage.assert_called_with(1, 'acid')
+        creature.level = 5
+        acid.activate(creature, 0)
+        creature.take_damage.assert_called_with(2, 'acid')
+        creature.level = 11
+        acid.activate(creature, 0)
+        creature.take_damage.assert_called_with(3, 'acid')
+        creature.level = 17
+        acid.activate(creature, 0)
+        creature.take_damage.assert_called_with(4, 'acid')
 
     def test_piped_effect(self):
         # TODO
