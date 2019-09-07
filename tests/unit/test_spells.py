@@ -3,14 +3,40 @@ import unittest
 
 from combatsim.creature import Creature
 from combatsim.dice import Dice
-from combatsim.spells import Spell, Effect, Heal, Damage, CantripDamage, Sphere
+from combatsim.spells import Spell, Effect, Heal, Damage, CantripDamage, Sphere, TargetType
 from combatsim.rules_error import RulesError
+
+
+class TestTargetType(unittest.TestCase):
+
+    def test_contains_max_creatures(self):
+        targets = TargetType(max=2)
+        self.assertTrue(targets.contains([(0,0),(1,1)]))
+
+    def test_contains_more_than_max_creatures_is_false(self):
+        targets = TargetType(max=2)
+        self.assertFalse(targets.contains([(0,0),(1,1),(2,2)]))
 
 
 class TestSphereTargetType(unittest.TestCase):
 
     def test_radius_0_contains_single_position(self):
-        self.assertTrue(Sphere(radius=0).contains((5,5)))
+        self.assertTrue(Sphere(radius=0).contains([(5,5)]))
+
+    def test_radius_0_does_not_contain_two_positions(self):
+        self.assertFalse(Sphere(radius=0).contains([(0,0),(5,5)]))
+
+    def test_radius_5_contains_two_positions(self):
+        self.assertTrue(Sphere(radius=5).contains([(-5,0),(5,0)]))
+
+    def test_radius_5_does_not_contain_two_positions(self):
+        self.assertFalse(Sphere(radius=5).contains([(-6,0),(5,0)]))
+
+    def test_radius_5_contains_two_positions_not_origin(self):
+        self.assertTrue(Sphere(radius=5).contains([(7,6),(17,6)]))
+
+    def test_radius_5_does_not_contain_two_positions_not_origin(self):
+        self.assertFalse(Sphere(radius=5).contains([(7,6),(17,7)]))
 
 
 class TestSpell(unittest.TestCase):
@@ -25,13 +51,24 @@ class TestSpell(unittest.TestCase):
         self.assertEqual(spell.effects, [])
 
     def test_full_initialization(self):
-        spell = Spell("test", casting_time="bonus", school="evocation", level=1, range_=5, effects=["Test"])
+        spell = Spell(
+            "test",
+            casting_time="bonus",
+            school="evocation",
+            level=1,
+            range_=5,
+            effects=["Test"]
+        )
         self.assertEqual(spell.name, "test")
         self.assertEqual(spell.casting_time, "bonus")
         self.assertEqual(spell.school, "evocation")
         self.assertEqual(spell.level, 1)
         self.assertEqual(spell.range, 5)
         self.assertEqual(spell.effects, ["Test"])
+
+    def test_cast_spell_at_lower_level_fails(self):
+        spell = Spell("test", level=2)
+        self.assertRaises(RulesError, spell.cast, None, 1)
 
 
 class TestSpellEffects(unittest.TestCase):

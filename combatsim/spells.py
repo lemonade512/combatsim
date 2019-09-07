@@ -24,7 +24,40 @@ LOGGER = EventLog()
 # reactions on certain events.
 
 
-class TargetType:
+class TargetList:
+    """ Class with convenience filters passed to effects.
+
+    For example, an effect may be filtered on specific targets such as enemies,
+    allies, or something else. The TargetList class is responsible for
+    providing the full list of targets and ways to filter those targets.
+    """
+
+    def __init__(self, targets=None):
+        if not targets:
+            self.targets = {'all': []}
+        else:
+            self.targets = targets
+
+    def add(self, target, tags=None):
+        self.targets['all'].append(target)
+        if not tags:
+            return
+
+        for tag in tags:
+            if tag not in self.target:
+                self.target[tag] = [target]
+            else:
+                self.target[tag].append(target)
+
+
+class Point:
+
+    @staticmethod
+    def dist_squared(p0, p1):
+        return (p0[0] - p1[0]) ** 2 + (p0[1] - p1[1]) ** 2
+
+
+class TargetGeometry:
 
     def __init__(self, **kwargs):
         """ Stores information for the AI targeting.
@@ -36,13 +69,20 @@ class TargetType:
 
         Keyword Arguments:
             max (int): The maximum number of targets allowed
-            filter (function):
+            filter (str): A filler value that is currently not used.
         """
         self.max = kwargs.get('max', None)
         self.filter = kwargs.get('filter', None)
 
+    def contains(self, positions):
+        if len(positions) > self.max:
+            return False
+        return True
 
-class Sphere(TargetType):
+    def target(self, caster, targets):
+
+
+class Sphere(TargetGeometry):
     """ Contains algorithms for calculating which targets are hit.
 
     There are two main uses of this class. First, you can use it to verify that
@@ -53,8 +93,8 @@ class Sphere(TargetType):
     Args:
         radius (int): Radius of the sphere.
         **kwargs: All additional keyword arguments will be passed to the
-            TargetType base class. Please see that class for a list of allowed
-            arguments.
+            TargetGeometry base class. Please see that class for a list of
+            allowed arguments.
     """
 
     def __init__(self, radius=5, **kwargs):
@@ -70,7 +110,25 @@ class Sphere(TargetType):
             True if all positions are within a circle of radius R. False
             otherwise.
         """
-        pass
+        if len(positions) <= 1:
+            return True
+
+        # First find the "bounding box" of the points
+        x_vals = [p[0] for p in positions]
+        y_vals = [p[1] for p in positions]
+        x1, y1 = min(x_vals), min(y_vals)
+        x2, y2 = max(x_vals), max(y_vals)
+
+        # Next find the center point of the bounding box
+        cx, cy = (x1 + x2) / 2, (y1 + y2) / 2
+
+        # Finally, check to see if the distance to all positions is less than
+        # the radius of the sphere
+        for p in positions:
+            if Point.dist_squared(p, (cx, cy)) > self.radius ** 2:
+                return False
+
+        return True
 
 
 class Spell:
@@ -105,7 +163,7 @@ class Spell:
 
         self.level = level
 
-    def cast(self, caster, level, *args, **kwargs):
+    def cast(self, caster, level, targets):
         if self.level > level:
             raise RulesError(
                 f"{self.name} must be cast at level {self.level} but "
@@ -115,7 +173,7 @@ class Spell:
         LOGGER.log(f"{caster} casts {self.name}")
         for effect in self.effects:
             message = effect.activate(
-                caster, level, *args, **kwargs
+                caster, level, targets
             )
 
 
