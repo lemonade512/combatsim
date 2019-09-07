@@ -24,6 +24,114 @@ LOGGER = EventLog()
 # reactions on certain events.
 
 
+class TargetType:
+
+    def __init__(self, **kwargs):
+        """ Stores information for the AI targeting.
+
+        For example, the target type may include a max number of targets that
+        the AI code will need to know about. By storing this information in the
+        target type, the AI can check for a max and decide what creatures to
+        target.
+
+        Keyword Arguments:
+            max (int): The maximum number of targets allowed
+            filter (function):
+        """
+        self.max = kwargs.get('max', None)
+        self.filter = kwargs.get('filter', None)
+
+
+class Sphere(TargetType):
+    """ Contains algorithms for calculating which targets are hit.
+
+    There are two main uses of this class. First, you can use it to verify that
+    a list of targets are all within a sphere of radius R. Second, you can use
+    it to find all possible targets within a sphere centered at a specified
+    position.
+
+    Args:
+        radius (int): Radius of the sphere.
+        **kwargs: All additional keyword arguments will be passed to the
+            TargetType base class. Please see that class for a list of allowed
+            arguments.
+    """
+
+    def __init__(self, radius=5, **kwargs):
+        super().__init__(**kwargs)
+        self.radius = radius
+
+    def contains(self, positions):
+        """ Checks if all given positions are within a circle of radius R.
+
+        R is the radius of the sphere passed into the constructor.
+
+        Returns:
+            True if all positions are within a circle of radius R. False
+            otherwise.
+        """
+        pass
+
+
+class Spell:
+    """ Parent class for all spells.
+
+    The __init__ method of this class is used to set up basic information about
+    who is casting the spell and what level the spell is being cast at.
+    """
+
+    def __init__(
+        self,
+        name,
+        casting_time="action",
+        school="conjuration",
+        level=0,
+        range_=0,
+        targeting=None,
+        effects=None
+    ):
+        self.name = name
+        self.casting_time = casting_time
+        self.school = school
+        self.range = range_
+
+        if not targeting:
+            self.targeting = Sphere()
+        self.targeting = targeting
+
+        if not effects:
+            effects = []
+        self.effects = effects
+
+        self.level = level
+
+    def cast(self, caster, level, *args, **kwargs):
+        if self.level > level:
+            raise RulesError(
+                f"{self.name} must be cast at level {self.level} but "
+                f"was cast at level {level}"
+            )
+
+        LOGGER.log(f"{caster} casts {self.name}")
+        for effect in self.effects:
+            message = effect.activate(
+                caster, level, *args, **kwargs
+            )
+
+
+# TODO (phillip): Really good idea. I can have a "Targets" class that is what
+# gets passed to effects. It usually just acts as a list, but it can also be a
+# dictionary with filters. For instance, if you want all targets, you just do
+#
+#   for target in targets:
+#       # do something
+#
+# but if you want just enemies, you could write
+#
+#   for target in targets['enemies']:
+#       # do something
+
+
 class Effect:
     """ An effect that can be triggered by a spell or trap.
 
@@ -37,37 +145,36 @@ class Effect:
         props (dict): A dictionary of dynamic properties used by the effect.
     """
 
-    def __init__(self, target_type, props=None):
-        self.target_type = target_type
+    def __init__(self, props=None):
         if not props:
             props = {}
         self.props = props
 
-    def get_targets(self, **kwargs):
-        if self.target_type == "targets":
-            targets = kwargs.get('targets', [])
-            min_targets = self.props.get('min_targets', None)
-            max_targets = self.props.get('max_targets', None)
+    #def get_targets(self, **kwargs):
+    #    if self.target_type == "targets":
+    #        targets = kwargs.get('targets', [])
+    #        min_targets = self.props.get('min_targets', None)
+    #        max_targets = self.props.get('max_targets', None)
 
-            if min_targets and len(targets) < min_targets:
-                raise RulesError(
-                    f"{self} must target at least {min_targets} targets"
-                )
-            if max_targets and len(targets) > max_targets:
-                raise RulesError(
-                    f"{self} must target at most {max_targets} targets"
-                )
+    #        if min_targets and len(targets) < min_targets:
+    #            raise RulesError(
+    #                f"{self} must target at least {min_targets} targets"
+    #            )
+    #        if max_targets and len(targets) > max_targets:
+    #            raise RulesError(
+    #                f"{self} must target at most {max_targets} targets"
+    #            )
 
-            return targets
+    #        return targets
 
-        if self.target_type == "target":
-            if 'target' in kwargs:
-                return [kwargs['target']]
-            else:
-                return []
+    #    if self.target_type == "target":
+    #        if 'target' in kwargs:
+    #            return [kwargs['target']]
+    #        else:
+    #            return []
 
-        if self.target_type == "self":
-            return [kwargs['caster']]
+    #    if self.target_type == "self":
+    #        return [kwargs['caster']]
 
     def activate(self, caster, level, **kwargs):
         raise NotImplementedError
@@ -175,66 +282,16 @@ class CantripDamage(PipedEffect):
         self.damage_dice = dice
 
     # TODO (phillip): This method is a lot like Damage.activate
-    def activate(self, caster, level, **kwargs):
+    def activate(self, caster, target, level, **kwargs):
         # Get piped damage or roll the damage
         damage = super().activate(caster, level, **kwargs)
         if not damage:
             scale = sum([1 for x in CantripDamage.levels if x <= caster.level])
             damage = sum((self.damage_dice * scale).roll())
 
-        for target in self.get_targets(caster=caster, **kwargs):
-            actual_damage = target.take_damage(damage, self.damage_type)
-            LOGGER.log(f"\tdamaging {target} by {actual_damage}")
+        actual_damage = target.take_damage(damage, self.damage_type)
+        LOGGER.log(f"\tdamaging {target} by {actual_damage}")
 
         return actual_damage
 
 
-class Spell:
-    """ Parent class for all spells.
-
-    The __init__ method of this class is used to set up basic information about
-    who is casting the spell and what level the spell is being cast at.
-    """
-
-    def __init__(self, name=None, effects=None, level=1, cantrip=False):
-        if not name:
-            name = type(self).__name__
-        self.name = name
-
-        if not effects:
-            effects = []
-        self.effects = effects
-
-        self.level = level
-        self.cantrip = cantrip
-
-    def cast(self, caster, level, *args, **kwargs):
-        if not self.cantrip and self.level > level:
-            raise RulesError(
-                f"{self.name} must be cast at level {self.level} but "
-                f"was cast at level {level}"
-            )
-
-        LOGGER.log(f"{caster} casts {self.name}")
-        for effect in self.effects:
-            message = effect.activate(
-                caster, level, *args, **kwargs
-            )
-
-
-# One or two targets within 5 feet of each other
-# Dex save or take 1d6 damage (changes as level up)
-# TODO (phillip): Targets must be within 5 feet of each other for acid splash
-# TODO (phillip): Damage changes based on caster level for acid splash
-# TODO (phillip): Creature must make dex save (no damage on pass, full damage on fail)
-acid_splash = Spell(
-    "Acid Splash",
-    effects=[
-        SavingThrow('targets', 'dexterity', Damage('target', type_='acid'), props={
-            'max_targets': 2
-        })
-    ],
-    cantrip=True
-)
-drain = Spell("Drain", effects=[Damage('self', Heal('target'))])
-cure_wounds = Spell("Cure Wounds", effects=[Heal('target')])

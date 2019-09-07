@@ -18,20 +18,26 @@ from combatsim.spells import CantripDamage, SavingThrow, Sphere, Spell
 # This spell’s damage increases by 1d6 when you reach 5th level (2d6), 11th level
 # (3d6), and 17th level (4d6).
 acid_splash = Spell(
-  casting_time="action",
-  # TODO technically, this isn't a sphere because both creatures have to be
-  # within 60 feet of the caster.
-  targets=Sphere(radius=5, max_=2, filter_="enemies"),
-  range_=60,
-  components={"V", "S"},
-  effects=[
-    SavingThrow(
-      "dexterity",
-      CantripDamage(Dice("1d6"), "acid"),
-      save_multiplier=0
-    )
-  ],
-  school="conjuration"
+    "Acid Splash",
+    casting_time="action",
+    # TODO technically, this isn't a sphere because both creatures have to be
+    # within 60 feet of the caster. Currently, this would allow the caster to
+    # target a creature at 60 feet and a hit a creature at 65 feet
+    targets=Sphere(radius=5),
+    range_=60,
+    components={"V", "S"},
+    effects=[
+        Filter(
+            "enemies",
+            max_=2,
+            SavingThrow(
+                "dexterity",
+                CantripDamage(Dice("1d6"), "acid"),
+                save_multiplier=0
+            )
+        )
+    ],
+    school="conjuration"
 )
 
 
@@ -40,14 +46,15 @@ acid_splash = Spell(
 # Until the end of your next turn, you have resistance against bludgeoning,
 # piercing, and slashing damage dealt by weapon attacks.
 blade_ward = Spell(
-  casting_time="action",
-  targets=Sphere(radius=0),
-  range_=0,
-  components={"V", "S"},
-  effects=[
-    Resistance(['bludgeoning', 'piercing', 'slashing'], duration=1)
-  ],
-  school="abjuration"
+    "Blade Ward",
+    casting_time="action",
+    targets=Sphere(radius=0),
+    range_=0,
+    components={"V", "S"},
+    effects=[
+        Resistance(['bludgeoning', 'piercing', 'slashing'], duration=1)
+    ],
+    school="abjuration"
 )
 
 # Booming Blade
@@ -64,6 +71,7 @@ blade_ward = Spell(
 # the target takes for moving increases to 2d8. Both damage rolls increase by
 # 1d8 at 11th level and 17th level.
 booming_blade = Spell(
+    "Booming Blade",
     casting_time="action",
     targets=Sphere(radius=0, max_=1),
     range_=5,
@@ -93,6 +101,7 @@ booming_blade = Spell(
 # This spell's damage increases by 1d8 when you reach 5th level (2d8), 11th
 # level (3d8), and 17th level (4d8).
 chill_touch = Spell(
+    "Chill Touch",
     casting_time="action",
     targets=Sphere(radius=0, max_=1),
     range_=120,

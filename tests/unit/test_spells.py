@@ -3,58 +3,38 @@ import unittest
 
 from combatsim.creature import Creature
 from combatsim.dice import Dice
-from combatsim.spells import Effect, Heal, Damage, CantripDamage
+from combatsim.spells import Spell, Effect, Heal, Damage, CantripDamage, Sphere
 from combatsim.rules_error import RulesError
 
 
-# TODO (phillip): Separate these test cases out. There can be a test case for
-# the base spell effects class, then a separate test case for each spell effect.
+class TestSphereTargetType(unittest.TestCase):
+
+    def test_radius_0_contains_single_position(self):
+        self.assertTrue(Sphere(radius=0).contains((5,5)))
+
+
+class TestSpell(unittest.TestCase):
+
+    def test_default_initialization(self):
+        spell = Spell("test")
+        self.assertEqual(spell.name, "test")
+        self.assertEqual(spell.casting_time, "action")
+        self.assertEqual(spell.school, "conjuration")
+        self.assertEqual(spell.level, 0)
+        self.assertEqual(spell.range, 0)
+        self.assertEqual(spell.effects, [])
+
+    def test_full_initialization(self):
+        spell = Spell("test", casting_time="bonus", school="evocation", level=1, range_=5, effects=["Test"])
+        self.assertEqual(spell.name, "test")
+        self.assertEqual(spell.casting_time, "bonus")
+        self.assertEqual(spell.school, "evocation")
+        self.assertEqual(spell.level, 1)
+        self.assertEqual(spell.range, 5)
+        self.assertEqual(spell.effects, ["Test"])
+
+
 class TestSpellEffects(unittest.TestCase):
-
-    def test_effect_with_single_target(self):
-        effect = Effect('target')
-        self.assertEqual(effect.get_targets(caster=1, target=2)[0], 2)
-
-    def test_effect_with_self_target(self):
-        effect = Effect('self')
-        self.assertEqual(effect.get_targets(caster=1, target=2)[0], 1)
-
-    def test_effect_with_multiple_targets(self):
-        effect = Effect('targets')
-        self.assertEqual(effect.get_targets(caster=1, targets=[2,3]), [2,3])
-
-    def test_effect_with_min_targets_raises_rules_error(self):
-        effect = Effect('targets', props={'min_targets': 2})
-        self.assertRaises(RulesError, effect.get_targets, caster=1, targets=[2])
-
-    def test_effect_with_max_targets_raises_rules_error(self):
-        effect = Effect('targets', props={'max_targets': 2})
-        self.assertRaises(RulesError, effect.get_targets, caster=1, targets=[2,3,4])
-
-    @patch("combatsim.dice.random.randint")
-    def test_heal_effect_at_level_1(self, randint):
-        randint.return_value = 1
-        creature = Creature(max_hp=5, hp=1)
-        heal = Heal('self')
-        heal.activate(creature, 1)
-        self.assertEqual(creature.hp, 2)
-
-    @patch("combatsim.dice.random.randint")
-    def test_heal_effect_at_level_3(self, randint):
-        randint.return_value = 1
-        creature = Creature(max_hp=5, hp=1)
-        heal = Heal('self')
-        heal.activate(creature, 3)
-        self.assertEqual(creature.hp, 4)
-
-    @patch("combatsim.dice.random.randint")
-    def test_damage_effect_does_acid_damage(self, randint):
-        randint.return_value = 2
-        creature = Mock()
-        creature.spellcasting = 0
-        acid = Damage('self', None, 'acid')
-        acid.activate(creature, 1)
-        creature.take_damage.assert_called_with(2, 'acid')
 
     def test_cantrip_damage_effect_scales_by_level(self):
         creature = Mock()
@@ -62,27 +42,14 @@ class TestSpellEffects(unittest.TestCase):
         acid = CantripDamage('self', Dice('1d1'), None, 'acid')
 
         creature.level = 1
-        acid.activate(creature, 0)
+        acid.activate(creature, creature, 0)
         creature.take_damage.assert_called_with(1, 'acid')
         creature.level = 5
-        acid.activate(creature, 0)
+        acid.activate(creature, creature, 0)
         creature.take_damage.assert_called_with(2, 'acid')
         creature.level = 11
-        acid.activate(creature, 0)
+        acid.activate(creature, creature, 0)
         creature.take_damage.assert_called_with(3, 'acid')
         creature.level = 17
-        acid.activate(creature, 0)
+        acid.activate(creature, creature, 0)
         creature.take_damage.assert_called_with(4, 'acid')
-
-    def test_piped_effect(self):
-        # TODO
-        pass
-
-    #@patch('combatsim.spells.Dice.roll')
-    #def test_cure_wounds_heals_creature(self, roll):
-    #    roll.return_value = [4]
-    #    creature = Mock()
-    #    creature.spellcasting = 1
-    #    cure_wounds = CureWounds(creature, 1)
-    #    cure_wounds.cast(creature)
-    #    creature.heal.assert_called_with(5)

@@ -37,22 +37,22 @@ class TestCreature(unittest.TestCase):
         self.assertEqual(creature.hp, creature.max_hp)
 
     def test_cast_spell_depletes_spell_slot(self):
-        creature = Creature(spell_slots=[1], spells=[Spell()])
+        creature = Creature(spell_slots=[1], spells=[Spell("test")])
         creature.cast(creature.spells[0], 1)
         self.assertEqual(creature.spell_slots[0], 0)
 
     def test_cast_spell_without_spell_slot_raises_error(self):
-        creature = Creature(spells=[Spell()])
+        creature = Creature(spells=[Spell("test")])
         self.assertRaises(RulesError, creature.cast, creature.spells[0], 1)
 
     def test_cast_too_many_spells_raises_error(self):
-        creature = Creature(spell_slots=[1], spells=[Spell()])
+        creature = Creature(spell_slots=[1], spells=[Spell("test")])
         creature.cast(creature.spells[0], 1)
         self.assertRaises(RulesError, creature.cast, creature.spells[0], 1)
 
     def test_cast_spell_not_in_creature_spell_list_raises_error(self):
         creature = Creature(spell_slots=[1], spells=[])
-        self.assertRaises(RulesError, creature.cast, Spell(), 1)
+        self.assertRaises(RulesError, creature.cast, Spell("test"), 1)
 
     def test_default_ac_is_10_plus_dex_mod(self):
         creature = Creature(dexterity=15)
