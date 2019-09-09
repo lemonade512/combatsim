@@ -23,24 +23,22 @@ acid_splash = Spell(
     # TODO technically, this isn't a sphere because both creatures have to be
     # within 60 feet of the caster. Currently, this would allow the caster to
     # target a creature at 60 feet and a hit a creature at 65 feet
-    targets=Sphere(radius=5),
+    targeting=Sphere(radius=5, max_=2, filter_="enemies"),
     range_=60,
     components={"V", "S"},
     effects=[
-        Filter(
-            "enemies",
-            max_=2,
-            SavingThrow(
-                "dexterity",
-                CantripDamage(Dice("1d6"), "acid"),
-                save_multiplier=0
-            )
+        SavingThrow(
+            "dexterity",
+            CantripDamage("1d6", "acid"),
+            multiplier=0,
+            filters=["enemies"],
+            max_=2
         )
     ],
     school="conjuration"
 )
 
-
+"""
 # Blade Ward: You extend your hand and trace a sigil of warding in the air.
 #
 # Until the end of your next turn, you have resistance against bludgeoning,
@@ -48,7 +46,7 @@ acid_splash = Spell(
 blade_ward = Spell(
     "Blade Ward",
     casting_time="action",
-    targets=Sphere(radius=0),
+    targeting=Sphere(radius=0),
     range_=0,
     components={"V", "S"},
     effects=[
@@ -73,7 +71,7 @@ blade_ward = Spell(
 booming_blade = Spell(
     "Booming Blade",
     casting_time="action",
-    targets=Sphere(radius=0, max_=1),
+    targeting=Sphere(radius=0, max_=1),
     range_=5,
     components={"V", "M"},
     effects=[
@@ -103,7 +101,7 @@ booming_blade = Spell(
 chill_touch = Spell(
     "Chill Touch",
     casting_time="action",
-    targets=Sphere(radius=0, max_=1),
+    targeting=Sphere(radius=0, max_=1),
     range_=120,
     components={"V", "S"},
     effects=[
@@ -117,3 +115,4 @@ chill_touch = Spell(
     ],
     school="necromancy"
 )
+"""

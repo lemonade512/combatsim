@@ -149,7 +149,7 @@ class Creature:
         # Set up grid if it is necessary
         self.grid = kwargs.get('grid', None)
         self.x, self.y = kwargs.get('pos', (None,None))
-        if self.x and self.y:
+        if self.x is not None and self.y is not None:
             self.grid[self.x, self.y] = self
 
     def __str__(self):
@@ -241,13 +241,15 @@ class Creature:
         else:
             LOGGER.log(f"{self} misses {target} with {attack.name}")
 
-    def cast(self, spell, level, *args, **kwargs):
+    # TODO (phillip): Allow passing a point into "targets"
+    def cast(self, spell, level, targets):
         """ Casts a spell.
 
         Args:
             caster (Creature): The creature that is casting the spell.
             level (int): The level this spell is being cast at.
-            spell (type): The class of spell being cast.
+            spell (Spell): The class of spell being cast.
+            targets (list or Point): List of creatures or a location.
         """
         if spell not in self.spells:
             raise RulesError(
@@ -265,7 +267,7 @@ class Creature:
                 )
             self.spell_slots[level-1] -= 1
 
-        spell.cast(self, level, *args, **kwargs)
+        spell.cast(self, level, targets)
 
     def take_damage(self, value, type_=None):
         """ Take damage of a given type.
@@ -304,6 +306,21 @@ class Creature:
         if not item:
             return
         item.equip(self)
+
+    def move(self, pos):
+        if self.grid[pos[0], pos[1]] != None:
+            raise RulesError("Creature cannot move into a non-empty space")
+
+        self.grid[self.x, self.y] = None
+        self.grid[pos[0], pos[1]] = self
+        self.x, self.y = pos
+
+    def distance_to(self, other):
+        """ Gets distance to another creature. """
+        x0,y0 = self.x, self.y
+        x1,y1 = other.x, other.y
+        dist = math.sqrt((x1-x0) ** 2 + (y1-y0) ** 2)
+        return int(dist)
 
 
 class Monster(Creature):

@@ -57,7 +57,8 @@ class MockDice:
     value = MockRoll()
 
     def __init__(self, dice, modifiers=None):
-        self.dice = dice
+        print('__init__', dice, type(dice))
+        self._dice = dice
 
     def roll(self):
         """ Checks stack for a function with roll value attached.
@@ -67,6 +68,7 @@ class MockDice:
         a value has been attached, that value will be returned. Otherwise, we
         return a randomized value using the default Dice class.
         """
+        print("ROLL:", self._dice)
         for f in inspect.stack():
             if 'self' in f.frame.f_locals:
                 obj_id = id(f.frame.f_locals['self'])
@@ -74,30 +76,36 @@ class MockDice:
                 if (
                     obj_id in MockDice.roll_vals
                     and f.function in MockDice.roll_vals[obj_id]
-                    and self.dice in MockDice.roll_vals[obj_id][f.function]
+                    and self._dice in MockDice.roll_vals[obj_id][f.function]
                 ):
-                    return MockDice.roll_vals[obj_id][f.function][self.dice]
+                    print(f"MOCK DICE::{self._dice}::self:: {MockDice.roll_vals[obj_id][f.function][self._dice]}")
+                    return MockDice.roll_vals[obj_id][f.function][self._dice]
 
                 # Case: Class
                 klass = f.frame.f_locals['self'].__class__.__name__
                 if (
                     klass in MockDice.roll_vals
-                    and self.dice in MockDice.roll_vals[klass]
+                    and self._dice in MockDice.roll_vals[klass]
                 ):
-                    return MockDice.roll_vals[klass][self.dice]
+                    print(f"MOCK DICE::{self._dice}::class:: {MockDice.roll_vals[klass][self._dice]}")
+                    return MockDice.roll_vals[klass][self._dice]
 
             # Case: Default
             filename = f.frame.f_code.co_filename
             lineno = f.frame.f_code.co_firstlineno
+            if type(self._dice) not in [str, int]:
+                print("!!!-------------", self._dice)
             if (
                 filename in MockDice.roll_vals
                 and lineno in MockDice.roll_vals[filename]
-                and self.dice in MockDice.roll_vals[filename][lineno]
+                and self._dice in MockDice.roll_vals[filename][lineno]
             ):
-                return MockDice.roll_vals[filename][lineno][self.dice]
+                print(f"MOCK DICE::{self._dice}::def:: {MockDice.roll_vals[filename][lineno][self._dice]}")
+                return MockDice.roll_vals[filename][lineno][self._dice]
 
         # Case: Not found
-        return Dice(self.dice).roll()
+        print(f"MOCK DICE::{self._dice}::not_found")
+        return Dice(self._dice).roll()
 
     def __add__(self, other):
         return self

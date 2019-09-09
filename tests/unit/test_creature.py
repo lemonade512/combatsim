@@ -38,21 +38,21 @@ class TestCreature(unittest.TestCase):
 
     def test_cast_spell_depletes_spell_slot(self):
         creature = Creature(spell_slots=[1], spells=[Spell("test")])
-        creature.cast(creature.spells[0], 1)
+        creature.cast(creature.spells[0], 1, [])
         self.assertEqual(creature.spell_slots[0], 0)
 
     def test_cast_spell_without_spell_slot_raises_error(self):
         creature = Creature(spells=[Spell("test")])
-        self.assertRaises(RulesError, creature.cast, creature.spells[0], 1)
+        self.assertRaises(RulesError, creature.cast, creature.spells[0], 1, [])
 
     def test_cast_too_many_spells_raises_error(self):
         creature = Creature(spell_slots=[1], spells=[Spell("test")])
-        creature.cast(creature.spells[0], 1)
-        self.assertRaises(RulesError, creature.cast, creature.spells[0], 1)
+        creature.cast(creature.spells[0], 1, [])
+        self.assertRaises(RulesError, creature.cast, creature.spells[0], 1, [])
 
     def test_cast_spell_not_in_creature_spell_list_raises_error(self):
         creature = Creature(spell_slots=[1], spells=[])
-        self.assertRaises(RulesError, creature.cast, Spell("test"), 1)
+        self.assertRaises(RulesError, creature.cast, Spell("test"), 1, [])
 
     def test_default_ac_is_10_plus_dex_mod(self):
         creature = Creature(dexterity=15)
@@ -98,6 +98,28 @@ class TestCreature(unittest.TestCase):
     def test_creature_spell_dc(self):
         creature = Creature(level=1, spellcasting="wisdom", wisdom=12)
         self.assertEqual(creature.spell_dc, 11)
+
+    def test_creature_moving_on_grid(self):
+        grid = {(0,0): None, (1,1): None}
+        creature = Creature(grid=grid, pos=(0,0))
+        self.assertEqual(grid[0, 0], creature)
+        creature.move((1,1))
+        self.assertEqual(grid[0, 0], None)
+        self.assertEqual(grid[1, 1], creature)
+        self.assertEqual(creature.x, 1)
+        self.assertEqual(creature.y, 1)
+
+    def test_creature_cannot_move_into_non_empty_space(self):
+        grid = {(0,0): None, (1,1): object()}
+        creature = Creature(grid=grid, pos=(0,0))
+        self.assertEqual(grid[0, 0], creature)
+        self.assertRaises(RulesError, creature.move, (1,1))
+
+    def test_distance_to_creature(self):
+        grid = {}
+        creature = Creature(grid=grid, pos=(0,0))
+        target = Creature(grid=grid, pos=(0,10))
+        self.assertEqual(creature.distance_to(target), 10)
 
 
 class TestCharacter(unittest.TestCase):

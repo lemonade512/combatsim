@@ -16,6 +16,12 @@ class TestGrid(unittest.TestCase):
         grid[0,0] = 1
         self.assertEqual(grid[0,0], 1)
 
+    def test_grid_set_single_item(self):
+        grid = Grid(1,2)
+        grid[0,0] = 1
+        self.assertEqual(grid[0,0], 1)
+        self.assertEqual(grid[0,1], None)
+
     def test_grid_with_invalid_height_raises_exception(self):
         self.assertRaises(ValueError, Grid, 10, 0)
 

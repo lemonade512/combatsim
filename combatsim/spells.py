@@ -38,16 +38,23 @@ class TargetList:
         else:
             self.targets = targets
 
+    def __iter__(self):
+        for target in self.targets['all']:
+            yield target
+
+    def __getitem__(self, key):
+        return self.targets[key]
+
     def add(self, target, tags=None):
         self.targets['all'].append(target)
         if not tags:
             return
 
         for tag in tags:
-            if tag not in self.target:
-                self.target[tag] = [target]
+            if tag not in self.targets:
+                self.targets[tag] = [target]
             else:
-                self.target[tag].append(target)
+                self.targets[tag].append(target)
 
 
 class Point:
@@ -71,15 +78,15 @@ class TargetGeometry:
             max (int): The maximum number of targets allowed
             filter (str): A filler value that is currently not used.
         """
-        self.max = kwargs.get('max', None)
-        self.filter = kwargs.get('filter', None)
+        self.max = kwargs.get('max_', None)
+        self.filter = kwargs.get('filter_', None)
 
     def contains(self, positions):
+        if self.max is None:
+            return True
         if len(positions) > self.max:
             return False
         return True
-
-    def target(self, caster, targets):
 
 
 class Sphere(TargetGeometry):
@@ -110,6 +117,8 @@ class Sphere(TargetGeometry):
             True if all positions are within a circle of radius R. False
             otherwise.
         """
+        if not super().contains(positions):
+            return False
         if len(positions) <= 1:
             return True
 
@@ -143,6 +152,7 @@ class Spell:
         name,
         casting_time="action",
         school="conjuration",
+        components=None,
         level=0,
         range_=0,
         targeting=None,
@@ -154,7 +164,7 @@ class Spell:
         self.range = range_
 
         if not targeting:
-            self.targeting = Sphere()
+            targeting = Sphere()
         self.targeting = targeting
 
         if not effects:
@@ -170,10 +180,27 @@ class Spell:
                 f"was cast at level {level}"
             )
 
+        target_list = TargetList()
+        for target in targets:
+            tags = []
+            if target.team is None or target.team != caster.team:
+                tags.append('enemies')
+            else:
+                tags.append('allies')
+            target_list.add(target, tags)
+
+        pos_list = [(t.x, t.y) for t in target_list]
+        if not self.targeting.contains(pos_list):
+            raise RulesError(f"{self.targeting} does not contain {target_list}")
+
+        for target in targets:
+            if caster.distance_to(target) > self.range:
+                raise RulesError(f"{target} is out of range of {caster}")
+
         LOGGER.log(f"{caster} casts {self.name}")
         for effect in self.effects:
             message = effect.activate(
-                caster, level, targets
+                caster, level, target_list
             )
 
 
@@ -191,72 +218,48 @@ class Spell:
 
 
 class Effect:
-    """ An effect that can be triggered by a spell or trap.
+    """ An effect that can be triggered by a spell or trap. """
 
-    Attributes:
-        target_type (str): This is how this spell targets creatures. There are
-            currently 3 supported target types. `self` targets the caster.
-            `target` targets a single creature including self. `targets will
-            target all creatures passed to the activate method in the
-            'targets' key. If you use the `targets` type, you can include
-            'min_targets' and 'max_targets' in the `props` attribute.
-        props (dict): A dictionary of dynamic properties used by the effect.
-    """
+    def __init__(self, filters=None, max_=None):
+        if filters is None:
+            filters = []
+        self.filters = filters
 
-    def __init__(self, props=None):
-        if not props:
-            props = {}
-        self.props = props
+        self.max = max_
 
-    #def get_targets(self, **kwargs):
-    #    if self.target_type == "targets":
-    #        targets = kwargs.get('targets', [])
-    #        min_targets = self.props.get('min_targets', None)
-    #        max_targets = self.props.get('max_targets', None)
-
-    #        if min_targets and len(targets) < min_targets:
-    #            raise RulesError(
-    #                f"{self} must target at least {min_targets} targets"
-    #            )
-    #        if max_targets and len(targets) > max_targets:
-    #            raise RulesError(
-    #                f"{self} must target at most {max_targets} targets"
-    #            )
-
-    #        return targets
-
-    #    if self.target_type == "target":
-    #        if 'target' in kwargs:
-    #            return [kwargs['target']]
-    #        else:
-    #            return []
-
-    #    if self.target_type == "self":
-    #        return [kwargs['caster']]
-
-    def activate(self, caster, level, **kwargs):
+    def activate(self, caster, level, targets):
         raise NotImplementedError
+
+    def filter(self, targets):
+        for filter_ in self.filters:
+            targets = targets[filter_]
+        return targets
 
 
 class SavingThrow(Effect):
+    """ Rolls a saving throw before activating effects.
 
-    # TODO (phillip): Implement half on fail
-    def __init__(self, target_type, attribute, effect, **kwargs):
-        super().__init__(target_type, **kwargs)
+    A saving throw can either reduce the contained effects by some multiplier,
+    or it can ignore any contained effects altogether. If you use a multiplier,
+    the contained effects **must** accept a 'multiplier' keyword argument in
+    their `activate` methods.
+    """
+
+    def __init__(self, attribute, effect, multiplier=None, **kwargs):
+        super().__init__(**kwargs)
         self.attribute = attribute
         self.effect = effect
+        self.multiplier = multiplier
 
-    def activate(self, caster, level, **kwargs):
-        # TODO (phillip): Need to implement saving throw proficiency. This
-        # logic should probably be moved to the `creature` class because the
-        # creature itself will know when it has advantage/disadvantage or other
-        # modifiers to the saving throw.
-        for target in self.get_targets(caster=caster, **kwargs):
-            # TODO (phillip): Not all effects should have an associated caster.
-            # I may want to rethink this API.
+    def activate(self, caster, level, targets):
+        for target in targets:
             saved = target.saving_throw(self.attribute, caster.spell_dc)
             if not saved:
-                self.effect.activate(caster, level, target=target)
+                self.effect.activate(caster, level, [target])
+            elif saved and self.multiplier:
+                self.effect.activate(
+                    caster, level, [target], multiplier=self.multiplier
+                )
 
 
 # TODO (philip): Spells could have a "dry run" function that will return a
@@ -287,8 +290,7 @@ class PipedEffect(Effect):
     the amount of damage piped to the Heal effect.
     """
 
-    def __init__(self, target_type, pipe=None):
-        super().__init__(target_type)
+    def __init__(self, pipe=None):
         self.pipe = pipe
 
     def activate(self, caster, level, **kwargs):
@@ -334,21 +336,25 @@ class Damage(PipedEffect):
 class CantripDamage(PipedEffect):
     levels = [1, 5,11,17]
 
-    def __init__(self, target_type, dice, pipe=None, type_=None):
-        super().__init__(target_type, pipe)
+    def __init__(self, dice, type_=None, **kwargs):
+        super().__init__(**kwargs)
         self.damage_type = type_
-        self.damage_dice = dice
+        self.damage_dice = Dice(dice)
 
     # TODO (phillip): This method is a lot like Damage.activate
-    def activate(self, caster, target, level, **kwargs):
+    def activate(self, caster, level, targets, **kwargs):
         # Get piped damage or roll the damage
         damage = super().activate(caster, level, **kwargs)
         if not damage:
             scale = sum([1 for x in CantripDamage.levels if x <= caster.level])
             damage = sum((self.damage_dice * scale).roll())
 
-        actual_damage = target.take_damage(damage, self.damage_type)
-        LOGGER.log(f"\tdamaging {target} by {actual_damage}")
+        print(f"CantripDamage:: {damage} to {targets}")
+
+        actual_damage = 0
+        for target in targets:
+            actual_damage += target.take_damage(damage, self.damage_type)
+            LOGGER.log(f"\tdamaging {target} by {actual_damage}")
 
         return actual_damage
 

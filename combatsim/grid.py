@@ -11,9 +11,7 @@ class Grid:
 
         self.width = width
         self.height = height
-        self._grid = [
-            [None] * width
-        ] * height
+        self._grid = [[None for i in range(height)] for j in range(width)]
 
     def __getitem__(self, position):
         x,y = position
@@ -30,6 +28,6 @@ class Grid:
             raise IndexError(f"X value of {x} not within [0,{self.width})")
         if y >= self.height or y < 0:
             raise IndexError(f"Y value of {y} not within [0,{self.height})")
-        if self._grid[x][y] is not None:
-            raise
+        #if self._grid[x][y] is not None:
+            #raise Rules
         self._grid[x][y] = val
