@@ -6,19 +6,6 @@ from combatsim.event import EventLog
 
 LOGGER = EventLog()
 
-# Example Spell:
-#   level: 1
-#   casting time: Reaction
-#   range: self, 30 ft., 40 ft. cube
-#   components
-#
-
-# Spell Types:
-#   1) Instantaneous offensive AoE spells (eg. fireball)
-#   2) Reactionary defensive spells (eg. shield, counterspell)
-#   3) Instantaneous offensive targeted spells (eg. acid arrow)
-#   4) ...
-
 # TODO event oriented programming. Spell effects can subscribe to "move" events from a character.
 # Could also be especially useful for "tactics" classes that want to perform
 # reactions on certain events.
@@ -273,11 +260,6 @@ class SavingThrow(Effect):
 # Then, my tactics and AI could do dry runs of spells and have some sort of
 # fitness function to determine which spell is best to cast.
 
-# TODO (phillip): Should there be a Query class for querying for specific
-# monsters or objects. There are spells that only affect undead. There are
-# spells that affect all allies within a region. There are spells that
-# effect allies in one way and enemies in a different way.
-
 # TODO (phillip): Maybe effects should have activation conditions? For example,
 # each turn we may check for an effect to become active or to dissipate. These
 # could be defined by "activation" conditions.
@@ -348,8 +330,6 @@ class CantripDamage(PipedEffect):
         if not damage:
             scale = sum([1 for x in CantripDamage.levels if x <= caster.level])
             damage = sum((self.damage_dice * scale).roll())
-
-        print(f"CantripDamage:: {damage} to {targets}")
 
         actual_damage = 0
         for target in targets:

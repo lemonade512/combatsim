@@ -15,6 +15,8 @@ class TestAcidSplash(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        # TODO (phillip): Figure out how to get rid of the need to mock out
+        # the event log.
         event_log = EventLog()
         event_log.encounter = unittest.mock.Mock()
 
@@ -106,3 +108,8 @@ class TestAcidSplash(unittest.TestCase):
             0,
             targets=[kobold1, kobold2, kobold3]
         )
+
+
+# TODO (phillip): Write these tests.
+def TestBladeWard(unittest.TestCase):
+    pass

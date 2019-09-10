@@ -57,7 +57,6 @@ class MockDice:
     value = MockRoll()
 
     def __init__(self, dice, modifiers=None):
-        print('__init__', dice, type(dice))
         self._dice = dice
 
     def roll(self):

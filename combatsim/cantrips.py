@@ -38,7 +38,6 @@ acid_splash = Spell(
     school="conjuration"
 )
 
-"""
 # Blade Ward: You extend your hand and trace a sigil of warding in the air.
 #
 # Until the end of your next turn, you have resistance against bludgeoning,
@@ -55,6 +54,7 @@ blade_ward = Spell(
     school="abjuration"
 )
 
+"""
 # Booming Blade
 #
 # As part of the action used to cast this spell, you must make a melee attack
