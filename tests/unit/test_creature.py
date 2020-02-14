@@ -1,3 +1,4 @@
+import pytest
 import unittest
 from unittest.mock import Mock
 
@@ -7,28 +8,42 @@ from combatsim.spells import Spell
 from combatsim.dice import Dice, Modifier
 from combatsim.event import EventLog
 
+TEST_SPELL = Spell("test")
+
+@pytest.mark.parametrize("spell_slots,spell,spell_level", [
+    ([], TEST_SPELL, 1),
+    ([1], Spell("nonexistant"), 1),
+    ([1], TEST_SPELL, 2)
+])
+def test_cast_spell_raises_error(spell_slots, spell, spell_level):
+    with pytest.raises(RulesError):
+        creature = Creature(spell_slots=spell_slots, spells=[TEST_SPELL])
+        creature.cast(spell, spell_level, [])
+
+@pytest.mark.parametrize("value,modifier", [
+    (4,-3),
+    (5,-3),
+    (6,-2),
+    (15,2),
+    (22,6)
+])
+@pytest.mark.parametrize("ability", [
+    'strength',
+    'dexterity',
+    'constitution',
+    'intelligence',
+    'wisdom',
+    'charisma'
+])
+def test_abilities_computation_of_ability_modifiers(value, modifier, ability):
+    creature = Creature(**{ability: value})
+    assert getattr(creature, ability).mod == modifier
 
 class TestCreature(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
         logger = EventLog(Mock())
-
-    def test_ability_modifiers_computed_from_abilties(self):
-        creature = Creature(
-            strength=4,
-            dexterity=5,
-            constitution=6,
-            intelligence=15,
-            wisdom=16,
-            charisma=22
-        )
-        self.assertEqual(creature.strength.mod, -3)
-        self.assertEqual(creature.dexterity.mod, -3)
-        self.assertEqual(creature.constitution.mod, -2)
-        self.assertEqual(creature.intelligence.mod, 2)
-        self.assertEqual(creature.wisdom.mod, 3)
-        self.assertEqual(creature.charisma.mod, 6)
 
     def test_max_heal_for_creature(self):
         creature = Creature(max_hp=5)
@@ -41,18 +56,10 @@ class TestCreature(unittest.TestCase):
         creature.cast(creature.spells[0], 1, [])
         self.assertEqual(creature.spell_slots[0], 0)
 
-    def test_cast_spell_without_spell_slot_raises_error(self):
-        creature = Creature(spells=[Spell("test")])
-        self.assertRaises(RulesError, creature.cast, creature.spells[0], 1, [])
-
     def test_cast_too_many_spells_raises_error(self):
         creature = Creature(spell_slots=[1], spells=[Spell("test")])
         creature.cast(creature.spells[0], 1, [])
         self.assertRaises(RulesError, creature.cast, creature.spells[0], 1, [])
-
-    def test_cast_spell_not_in_creature_spell_list_raises_error(self):
-        creature = Creature(spell_slots=[1], spells=[])
-        self.assertRaises(RulesError, creature.cast, Spell("test"), 1, [])
 
     def test_default_ac_is_10_plus_dex_mod(self):
         creature = Creature(dexterity=15)
@@ -143,9 +150,8 @@ class TestAbility(unittest.TestCase):
 
     def test_set_modifier_fails(self):
         ability = Ability("Constitution", 12)
-        def _assign():
+        with pytest.raises(AttributeError):
             ability.mod = 5
-        self.assertRaises(AttributeError, _assign)
 
     def test_compare_abilities_with_same_mod(self):
         strength = Ability("Strength", 10)
