@@ -8,9 +8,17 @@ grid-based combat.
 
 Written in Python 3
 
-## Install
-`pipenv install`
+## Getting Started
+First, setup your environment using pyenv and poetry:
+```
+cd /path/to/combatsim
+pyenv install 3.8.1
+poetry install
+```
+If you have a problem running the above, you may need to run `pyenv local 3.8.1`.
 
-## Run Tests
-
-`pipenv run nosetests`
+Next, make sure you can run all the unit and functional tests:
+```
+poetry shell
+pytest tests
+```
