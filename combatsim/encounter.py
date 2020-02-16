@@ -11,7 +11,7 @@ class Encounter:
 
     def run(self):
         print("==== Combatants ====")
-        event_log = EventLog()
+        event_log = EventLog.get_log()
         event_log.encounter = self
         for creature in self.creatures:
             print(f"{creature}: {creature.hp}")

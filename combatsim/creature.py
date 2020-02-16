@@ -9,8 +9,6 @@ from combatsim.items import Armor, Weapon
 from combatsim.rules_error import RulesError
 from combatsim.event import EventLog
 
-LOGGER = EventLog()
-
 
 class Creature:
     """ Definition of a creature and its stats.
@@ -160,7 +158,7 @@ class Creature:
         """
         saving_throw = (Dice("1d20") + self.attributes[attribute]).roll()[0]
         if saving_throw >= dc:
-            LOGGER.log(f"\t{self} saved against {attribute} with a {saving_throw}")
+            EventLog.log(f"\t{self} saved against {attribute} with a {saving_throw}")
             return True
         else:
             return False
@@ -205,9 +203,9 @@ class Creature:
         if attack_roll >= target.ac:
             damage, damage_type = attack.damage_roll(crit=crit)
             damage_taken = target.take_damage(damage, damage_type)
-            LOGGER.log(f"{self} hits {target} with {attack.name} doing {damage_taken} damage")
+            EventLog.log(f"{self} hits {target} with {attack.name} doing {damage_taken} damage")
         else:
-            LOGGER.log(f"{self} misses {target} with {attack.name}")
+            EventLog.log(f"{self} misses {target} with {attack.name}")
 
     # TODO (phillip): Allow passing a point into "targets"
     def cast(self, spell, level, targets):

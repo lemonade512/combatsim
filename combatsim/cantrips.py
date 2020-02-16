@@ -6,7 +6,6 @@ Therefore, I will be focussing on things that do damage, or exert some
 positive or negative effects on nearby creatures.
 """
 
-from combatsim.dice import Dice
 from combatsim.spells import CantripDamage, SavingThrow, Sphere, Spell
 
 # Acid Splash: You hurl a bubble of acid.

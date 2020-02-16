@@ -7,32 +7,29 @@ class EventLog:
     event log. Then, the event log can be used to perform basic statistical
     analysis or display what happened to the user.
     """
-    __singleton = None
-
-    def __new__(cls, *args, **kwargs):
-        if not cls.__singleton:
-            cls.__singleton = super(EventLog, cls).__new__(cls)
-
-        return cls.__singleton
+    encounter = None
+    events = []
 
     def __init__(self, encounter=None):
-        self.encounter = encounter
-        self.events = []
+        EventLog.encounter = encounter
+        EventLog.events = []
+        EventLog.__singleton = self
 
     def __str__(self):
         """ Representation of events in the event log. """
         output = ""
-        for event in self.events:
+        for event in EventLog.events:
             output += str(event) + "\n"
         return output
 
-    def log(self, message):
+    @staticmethod
+    def log(message):
         """ Logs a message in the event log """
-        if not self.encounter:
-            raise ValueError("EventLog encounter has not yet been initialized")
+        if not EventLog.encounter:
+            return
 
-        new_event = Event(self.encounter.combat_round, message)
-        self.events.append(new_event)
+        new_event = Event(EventLog.encounter.combat_round, message)
+        EventLog.events.append(new_event)
         return new_event
 
 

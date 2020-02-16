@@ -10,6 +10,3 @@ def test_event_log_tracks_encounter_round(encounter, event_log):
 def test_event_log_adds_new_events(event_log):
     event_log.log("Hello")
     assert event_log.events[0].message == "Hello"
-
-def test_event_log_is_singleton(event_log):
-    assert event_log is EventLog()

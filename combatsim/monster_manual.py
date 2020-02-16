@@ -6,7 +6,7 @@ books should be kept in a private database.
 """
 
 from combatsim.creature import Monster
-from combatsim.items import Weapon
+from combatsim.items import Armor, Weapon
 from combatsim.dice import Dice
 
 # TODO (phillip): Implement range for light crossbow

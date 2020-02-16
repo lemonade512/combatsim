@@ -4,8 +4,6 @@ from combatsim.dice import Dice
 from combatsim.rules_error import RulesError
 from combatsim.event import EventLog
 
-LOGGER = EventLog()
-
 # TODO event oriented programming. Spell effects can subscribe to "move" events from a character.
 # Could also be especially useful for "tactics" classes that want to perform
 # reactions on certain events.
@@ -184,7 +182,7 @@ class Spell:
             if caster.distance_to(target) > self.range:
                 raise RulesError(f"{target} is out of range of {caster}")
 
-        LOGGER.log(f"{caster} casts {self.name}")
+        EventLog.log(f"{caster} casts {self.name}")
         for effect in self.effects:
             message = effect.activate(
                 caster, level, target_list
@@ -273,6 +271,7 @@ class PipedEffect(Effect):
     """
 
     def __init__(self, pipe=None):
+        super().__init__()
         self.pipe = pipe
 
     def activate(self, caster, level, **kwargs):
@@ -291,7 +290,7 @@ class Heal(PipedEffect):
 
         for target in self.get_targets(caster=caster, **kwargs):
             actual_healing = target.heal(healing)
-            LOGGER.log(f"\thealing {target} by {actual_healing}")
+            EventLog.log(f"\thealing {target} by {actual_healing}")
 
         return actual_healing
 
@@ -310,7 +309,7 @@ class Damage(PipedEffect):
 
         for target in self.get_targets(caster=caster, **kwargs):
             actual_damage = target.take_damage(damage, self.damage_type)
-            LOGGER.log(f"\tdamaging {target} by {actual_damage}")
+            EventLog.log(f"\tdamaging {target} by {actual_damage}")
 
         return actual_damage
 
@@ -334,7 +333,7 @@ class CantripDamage(PipedEffect):
         actual_damage = 0
         for target in targets:
             actual_damage += target.take_damage(damage, self.damage_type)
-            LOGGER.log(f"\tdamaging {target} by {actual_damage}")
+            EventLog.log(f"\tdamaging {target} by {actual_damage}")
 
         return actual_damage
 
