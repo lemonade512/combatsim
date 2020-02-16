@@ -94,6 +94,17 @@ def test_create_creature_from_base_with_customizations():
     assert creature.name == "New Creature"
     assert creature.strength == Ability("Strength", 12)
 
+def test_create_multiple_creatures_from_base_with_customizations():
+    base = {
+        'name': "Test",
+        'strength': 12,
+        'dexterity': 15
+    }
+    creature1 = Monster.from_base(base, strength=15)
+    creature2 = Monster.from_base(base)
+    assert creature1.strength == Ability("Strength", 15)
+    assert creature2.strength == Ability("Strength", 12)
+
 def test_creature_max_hp_is_at_least_1():
     creature = Creature(level=1, hd=Dice("1d1"), constitution=2)
     assert creature.max_hp == 1

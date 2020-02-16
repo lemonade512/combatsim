@@ -51,8 +51,8 @@ class Creature:
     @classmethod
     def from_base(cls, base, **kwargs):
         """ Creates new monster from base template. """
-        template = base
-        base.update(kwargs)
+        template = base.copy()
+        template.update(kwargs)
         return cls(**template)
 
     def __init__(self, **kwargs):
