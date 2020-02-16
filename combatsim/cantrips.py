@@ -42,17 +42,17 @@ acid_splash = Spell(
 #
 # Until the end of your next turn, you have resistance against bludgeoning,
 # piercing, and slashing damage dealt by weapon attacks.
-blade_ward = Spell(
-    "Blade Ward",
-    casting_time="action",
-    targeting=Sphere(radius=0),
-    range_=0,
-    components={"V", "S"},
-    effects=[
-        Resistance(['bludgeoning', 'piercing', 'slashing'], duration=1)
-    ],
-    school="abjuration"
-)
+#blade_ward = Spell(
+#    "Blade Ward",
+#    casting_time="action",
+#    targeting=Sphere(radius=0),
+#    range_=0,
+#    components={"V", "S"},
+#    effects=[
+#        Resistance(['bludgeoning', 'piercing', 'slashing'], duration=1)
+#    ],
+#    school="abjuration"
+#)
 
 """
 # Booming Blade

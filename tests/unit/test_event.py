@@ -1,25 +1,15 @@
-import unittest
+import pytest
 
-from combatsim.encounter import Encounter
 from combatsim.event import EventLog
 
 
-class TestEventLog(unittest.TestCase):
+def test_event_log_tracks_encounter_round(encounter, event_log):
+    encounter.combat_round=4
+    assert event_log.log("Test").round == 4
 
-    def setUp(self):
-        self.test_encounter = Encounter([])
+def test_event_log_adds_new_events(event_log):
+    event_log.log("Hello")
+    assert event_log.events[0].message == "Hello"
 
-    def test_event_log_tracks_encounter_round(self):
-        event_log = EventLog(self.test_encounter)
-        self.test_encounter.combat_round=4
-        self.assertEqual(event_log.log("Test").round, 4)
-
-    def test_event_log_adds_new_events(self):
-        event_log = EventLog(self.test_encounter)
-        event_log.log("Hello")
-        self.assertEqual(event_log.events[0].message, "Hello")
-
-    def test_event_log_is_singleton(self):
-        log = EventLog()
-        log2 = EventLog()
-        self.assertIs(log, log2)
+def test_event_log_is_singleton(event_log):
+    assert event_log is EventLog()

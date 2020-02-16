@@ -1,5 +1,6 @@
 """ Verifies that mock dice work. """
 
+import pytest
 import unittest
 from unittest.mock import Mock, patch
 
@@ -26,16 +27,8 @@ class MyDummyClass:
         return self.dice.roll()
 
 
-class TestMockDice(unittest.TestCase):
-
-    def setUp(self):
-        # TODO (phillip): Figure out how to use configuration or something
-        # to make logger just log to console or something.
-        self.patcher = patch('combatsim.creature.LOGGER')
-        self.patcher.start()
-
-    def tearDown(self):
-        self.patcher.stop()
+@pytest.mark.usefixtures("event_log")
+class TestMockDice:
 
     def test_patch_calls_function_with_args(self):
         func = Mock()
@@ -44,35 +37,35 @@ class TestMockDice(unittest.TestCase):
         func.assert_called_with("a", "b")
 
     def test_patches_with_mock_dice(self):
-        self.assertEqual(combatsim.creature.Dice, Dice)
+        assert combatsim.creature.Dice == Dice
         @MockDice.patch('combatsim.creature', 'combatsim.items')
         def func():
-            self.assertEqual(combatsim.creature.Dice, MockDice)
+            assert combatsim.creature.Dice == MockDice
         func()
-        self.assertEqual(combatsim.creature.Dice, Dice)
+        assert combatsim.creature.Dice == Dice
 
-    def test_patchs_multiple_with_mock_dice(self):
-        self.assertEqual(combatsim.creature.Dice, Dice)
-        self.assertEqual(combatsim.items.Dice, Dice)
+    def test_patches_multiple_with_mock_dice(self):
+        assert combatsim.creature.Dice == Dice
+        assert combatsim.items.Dice == Dice
         @MockDice.patch('combatsim.creature', 'combatsim.items')
         def func():
-            self.assertEqual(combatsim.creature.Dice, MockDice)
-            self.assertEqual(combatsim.items.Dice, MockDice)
+            assert combatsim.creature.Dice == MockDice
+            assert combatsim.items.Dice == MockDice
         func()
-        self.assertEqual(combatsim.creature.Dice, Dice)
-        self.assertEqual(combatsim.items.Dice, Dice)
+        assert combatsim.creature.Dice == Dice
+        assert combatsim.items.Dice == Dice
 
     @MockDice.patch('combatsim.creature')
     def test_mock_dice_fail_tautological_save(self):
         kobold = combatsim.creature.Creature()
         MockDice.set_roll(kobold.saving_throw, '1d20', MockDice.value < 0)
-        self.assertFalse(kobold.saving_throw('wisdom', 0))
+        assert not kobold.saving_throw('wisdom', 0)
 
     @MockDice.patch('combatsim.creature')
     def test_mock_dice_succeed_impossible_save(self):
         kobold = combatsim.creature.Creature()
         MockDice.set_roll(kobold.saving_throw, '1d20', MockDice.value > 100)
-        self.assertTrue(kobold.saving_throw('wisdom', 100))
+        assert kobold.saving_throw('wisdom', 100)
 
     @MockDice.patch('combatsim.creature')
     def test_mock_dice_multiple_creatures(self):
@@ -80,20 +73,20 @@ class TestMockDice(unittest.TestCase):
         kobold2 = combatsim.creature.Creature()
         MockDice.set_roll(kobold1.saving_throw, '1d20', MockDice.value > 100)
         MockDice.set_roll(kobold2.saving_throw, '1d20', MockDice.value < 0)
-        self.assertTrue(kobold1.saving_throw('wisdom', 100))
-        self.assertFalse(kobold2.saving_throw('wisdom', 0))
+        assert kobold1.saving_throw('wisdom', 100)
+        assert not kobold2.saving_throw('wisdom', 0)
 
     @MockDice.patch('combatsim.creature')
     def test_mock_dice_on_class(self):
         kobold = combatsim.creature.Creature()
         MockDice.set_roll(combatsim.creature.Creature, '1d20', MockDice.value > 100)
-        self.assertTrue(kobold.saving_throw('wisdom', 100))
+        assert kobold.saving_throw('wisdom', 100)
 
     @MockDice.patch('combatsim.creature')
     def test_mock_dice_on_class_function(self):
         kobold = combatsim.creature.Creature()
         MockDice.set_roll(combatsim.creature.Creature.saving_throw, '1d20', MockDice.value > 100)
-        self.assertTrue(kobold.saving_throw('wisdom', 100))
+        assert kobold.saving_throw('wisdom', 100)
 
     @MockDice.patch('combatsim.creature')
     def test_mock_dice_object_overrides_class(self):
@@ -101,8 +94,8 @@ class TestMockDice(unittest.TestCase):
         kobold2 = combatsim.creature.Creature()
         MockDice.set_roll(combatsim.creature.Creature.saving_throw, '1d20', MockDice.value > 100)
         MockDice.set_roll(kobold2.saving_throw, '1d20', MockDice.value < 0)
-        self.assertTrue(kobold1.saving_throw('wisdom', 100))
-        self.assertFalse(kobold2.saving_throw('wisdom', 0))
+        assert kobold1.saving_throw('wisdom', 100)
+        assert not kobold2.saving_throw('wisdom', 0)
 
     @MockDice.patch('combatsim.creature', 'combatsim.items')
     def test_mock_dice_multiple_types(self):
@@ -133,4 +126,4 @@ class TestMockDice(unittest.TestCase):
         obj = MyDummyClass(MockDice("1d8"))
         MockDice.set_roll(obj.everything, '1d8', MockDice.value == 0)
         MockDice.set_roll(obj.run, '1d8', MockDice.value == 1)
-        self.assertEqual(obj.everything(), ([1], [0]))
+        assert obj.everything() == ([1], [0])
