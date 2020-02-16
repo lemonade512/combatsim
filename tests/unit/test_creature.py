@@ -14,6 +14,10 @@ TEST_SPELL = Spell("test")
 def test_creature():
     return Creature(max_hp=5, spell_slots=[1], spells=[Spell("test")])
 
+def test_creature_initialization(test_creature):
+    assert test_creature.resistances == []
+    assert test_creature.vulnerabilities == []
+
 @pytest.mark.parametrize("spell_slots,spell,spell_level", [
     ([], TEST_SPELL, 1),
     ([1], Spell("nonexistant"), 1),
@@ -139,3 +143,15 @@ def test_distance_to_creature():
 def test_player_max_hp_is_at_least_1():
     player = Character(level=1, hd=Dice("1d1"), constitution=2)
     assert player.max_hp == 1
+
+def test_creature_takes_damage_with_resistance(test_creature):
+    test_creature.resistances = ['acid']
+    before = test_creature.hp
+    test_creature.take_damage(2, 'acid')
+    assert test_creature.hp == before - 1
+
+def test_vulnerabilities(test_creature):
+    test_creature.vulnerabilities = ['acid']
+    before = test_creature.hp
+    test_creature.take_damage(1, 'acid')
+    assert test_creature.hp == before - 2

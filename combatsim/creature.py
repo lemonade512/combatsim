@@ -106,6 +106,7 @@ class Creature:
         self.tactics = kwargs.get('tactics', TargetWeakest)(self)
         self.team = kwargs.get('team', None)
         self.resistances = kwargs.get('resistances', [])
+        self.vulnerabilities = kwargs.get('vulnerabilities', [])
         self.spellcasting = self.attributes[
             kwargs.get('spellcasting', 'wisdom')
         ]
@@ -249,6 +250,8 @@ class Creature:
         if type_ in self.resistances:
             taken = math.floor(value / 2)
             # TODO (phillip): event log should show that damage was reduced
+        elif type_ in self.vulnerabilities:
+            taken = value * 2
         else:
             taken = value
 
